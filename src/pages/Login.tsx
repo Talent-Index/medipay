@@ -1,20 +1,19 @@
 import { useState } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { useAuthStore, UserRole } from "@/store/authStore";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Users, Activity, Wallet, Home, Building2 } from "lucide-react";
-import SuiWalletButton from "@/components/sui/SuiWalletButton";
+import { Shield, Users, Activity, Wallet, Home } from "lucide-react";
+import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const { login } = useAuthStore();
   const { toast } = useToast();
@@ -25,19 +24,19 @@ export default function Login() {
 
     try {
       const success = await login(email, password);
-      
+
       if (success) {
         // Get the user from the auth store to determine their role
         const { user } = useAuthStore.getState();
-        const redirectPath = user?.role === 'doctor' ? '/doctor' : 
-                            user?.role === 'institution' ? '/institution' :
-                            user?.role === 'insurance' ? '/insurance' : '/patient';
-        
+        const redirectPath = user?.role === 'doctor' ? '/doctor' :
+          user?.role === 'institution' ? '/institution' :
+            user?.role === 'insurance' ? '/insurance' : '/patient';
+
         toast({
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
-        
+
         navigate(redirectPath);
       } else {
         toast({
@@ -76,7 +75,7 @@ export default function Login() {
         <Home className="w-4 h-4" />
         Home
       </Button>
-      
+
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-medical mb-4">
@@ -91,13 +90,13 @@ export default function Login() {
         <Card className="medical-card">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
-                <><Users className="w-5 h-5" /> User Login</>
+              <><Users className="w-5 h-5" /> User Login</>
             </CardTitle>
             <CardDescription>
               Enter your credentials to access your dashboard
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
@@ -133,39 +132,20 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-6">
-              <div className="relative">
+            <div className="mt-6 flex flex-col items-center gap-4 w-full">
+              <div className="relative w-full">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="bg-card px-4 text-muted-foreground">Or continue with</span>
+                  <span className="px-4 bg-gradient-to-br from-background via-accent/30 to-primary/5 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-3">
-                <SuiWalletButton />
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full transition-smooth hover:scale-105"
-                  onClick={handleCryptoLogin}
-                >
-                  <Wallet className="w-4 h-4 mr-2" />
-                  Other Crypto Wallet
-                </Button>
-              </div>
+              <ConnectWalletButton />
             </div>
 
             <div className="mt-6 text-center space-y-2">
-              <Link
-                to="/forgot-password"
-                className="text-primary hover:text-primary-hover text-sm transition-smooth"
-              >
-                Forgot your password?
-              </Link>
-              
               <div className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
