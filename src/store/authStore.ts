@@ -48,41 +48,41 @@ const mockUsers: User[] = [
 ];
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
-      user: null,
-      isAuthenticated: false,
+  user: null,
+  isAuthenticated: false,
 
-      login: async (email: string, password: string) => {
-        // Mock authentication - in real app, this would call an API
-        const user = mockUsers.find(u => u.email === email);
-        
-        if (user && password === 'demo123') {
-          set({ user, isAuthenticated: true });
-          return true;
-        }
-        return false;
-      },
+  login: async (email: string, password: string) => {
+    // Mock authentication - in real app, this would call an API
+    const user = mockUsers.find(u => u.email === email);
 
-      register: async (email: string, password: string, name: string, role: UserRole) => {
-        // Mock registration
-        const newUser: User = {
-          id: Date.now().toString(),
-          email,
-          name,
-          role,
-        };
-        
-        set({ user: newUser, isAuthenticated: true });
-        return true;
-      },
+    if (user && password === 'demo123') {
+      set({ user, isAuthenticated: true });
+      return true;
+    }
+    return false;
+  },
 
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
+  register: async (email: string, password: string, name: string, role: UserRole) => {
+    // Mock registration
+    const newUser: User = {
+      id: Date.now().toString(),
+      email,
+      name,
+      role,
+    };
 
-      updateProfile: (updates: Partial<User>) => {
-        const currentUser = get().user;
-        if (currentUser) {
-          set({ user: { ...currentUser, ...updates } });
-        }
-      },
-    }));
+    set({ user: newUser, isAuthenticated: true });
+    return true;
+  },
+
+  logout: () => {
+    set({ user: null, isAuthenticated: false });
+  },
+
+  updateProfile: (updates: Partial<User>) => {
+    const currentUser = get().user;
+    if (currentUser) {
+      set({ user: { ...currentUser, ...updates } });
+    }
+  },
+}));

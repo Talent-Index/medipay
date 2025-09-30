@@ -19,6 +19,8 @@ import InsuranceTransactions from "./pages/insurance/InsuranceTransactions";
 import InsurancePolicies from "./pages/insurance/InsurancePolicies";
 import InsurancePatients from "./pages/insurance/InsurancePatients";
 import InsuranceSettings from "./pages/insurance/InsuranceSettings";
+import ForgotPassword from "./pages/ForgotPassword";
+import CreatePassword from "./pages/CreatePassword";
 import UserManagement from "./components/institution/UserManagement";
 import ProductManagement from "./components/institution/ProductManagement";
 
@@ -29,6 +31,8 @@ const Router = () => (
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/create-password" element={<CreatePassword />} />
         <Route path="/transactions" element={<TransactionExplorer />} />
 
         {/* Patient Routes */}
