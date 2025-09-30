@@ -3,7 +3,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockTransactions } from "@/data/mockData";
+interface Transaction {
+  id: string;
+  invoiceId: string;
+  patientName: string;
+  doctorName: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+  timestamp: string;
+  blockchainHash?: string;
+  proofOfStake?: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -24,8 +35,9 @@ export default function PatientTransactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Filter transactions for current user
-  const userTransactions = mockTransactions.filter(transaction => 
+  // Placeholder dataset (empty until backend integration)
+  const allTransactions: Transaction[] = [];
+  const userTransactions = allTransactions.filter(transaction => 
     transaction.patientName === user?.name
   );
   

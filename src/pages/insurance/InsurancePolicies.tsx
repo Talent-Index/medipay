@@ -18,20 +18,7 @@ interface Policy {
 
 export default function InsurancePolicies() {
     const { user } = useAuthStore();
-    const [policies, setPolicies] = useState<Policy[]>([
-        {
-            id: 'POL-001',
-            name: 'Basic Health Coverage',
-            description: 'Standard health insurance coverage for common medical services',
-            services: [
-                { service: 'General Consultation', coverageAmount: 120 },
-                { service: 'Blood Test', coverageAmount: 68 },
-                { service: 'X-Ray', coverageAmount: 80 }
-            ],
-            premium: 150,
-            active: true
-        }
-    ]);
+    const [policies, setPolicies] = useState<Policy[]>([]);
 
     const [isCreating, setIsCreating] = useState(false);
     const [newPolicy, setNewPolicy] = useState({

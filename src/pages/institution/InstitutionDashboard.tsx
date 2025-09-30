@@ -1,7 +1,58 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockInvoices, mockInsurancePayments, mockTransactions, mockInstitutionUsers, mockProducts } from "@/data/mockData";
+interface Invoice {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  institutionId: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+  createdAt: string;
+  paidAt?: string;
+  description?: string;
+  insuranceClaimId?: string;
+}
+
+interface InsurancePayment {
+  id: string;
+  patientId: string;
+  institutionId: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+}
+
+interface Transaction {
+  id: string;
+  invoiceId: string;
+  patientName: string;
+  doctorName: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+  timestamp: string;
+}
+
+interface InstitutionUser {
+  email: string;
+  institutionId: string;
+  role: 'admin' | 'manager' | 'staff';
+  status: 'active' | 'inactive';
+  permissions: string[];
+}
+
+interface Product {
+  id: string;
+  institutionId: string;
+  name: string;
+  description: string;
+  category: string;
+  unitPrice: number;
+  unit?: string;
+  isActive: boolean;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import {
@@ -25,14 +76,20 @@ export default function InstitutionDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Filter data for current institution
-  const institutionInvoices = mockInvoices.filter(invoice => invoice.institutionId === user?.id);
-  const institutionPayments = mockInsurancePayments.filter(payment => payment.institutionId === user?.id);
-  const institutionTransactions = mockTransactions.filter(transaction =>
+  // Placeholder datasets (empty until backend integration)
+  const allInvoices: Invoice[] = [];
+  const allPayments: InsurancePayment[] = [];
+  const allTransactions: Transaction[] = [];
+  const allInstitutionUsers: InstitutionUser[] = [];
+  const allProducts: Product[] = [];
+
+  const institutionInvoices = allInvoices.filter(invoice => invoice.institutionId === user?.id);
+  const institutionPayments = allPayments.filter(payment => payment.institutionId === user?.id);
+  const institutionTransactions = allTransactions.filter(transaction =>
     institutionInvoices.some(invoice => invoice.id === transaction.invoiceId)
   );
-  const institutionUsers = mockInstitutionUsers.filter(u => u.institutionId === user?.id);
-  const institutionProducts = mockProducts.filter(p => p.institutionId === user?.id);
+  const institutionUsers = allInstitutionUsers.filter(u => u.institutionId === user?.id);
+  const institutionProducts = allProducts.filter(p => p.institutionId === user?.id);
 
   // Get current user's role and permissions
   const currentUser = institutionUsers.find(u => u.email === user?.email);

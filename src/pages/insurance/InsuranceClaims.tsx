@@ -1,7 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockInsurancePayments } from "@/data/mockData";
+interface InsurancePayment {
+    id: string;
+    patientId: string;
+    institutionId: string;
+    service: string;
+    amount: number;
+    status: 'pending' | 'paid' | 'confirmed';
+    processedDate: string;
+    claimId: string;
+    patientName: string;
+    institutionName: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useInvoice } from "@/hooks/useInvoice";
 import { FileText, Search, Filter, Eye, CheckCircle, XCircle, Loader2 } from "lucide-react";
@@ -13,8 +24,9 @@ export default function InsuranceClaims() {
     const [filter, setFilter] = useState('all');
     const [approvingClaim, setApprovingClaim] = useState<string | null>(null);
 
-    // Filter claims for current insurance company
-    const claims = mockInsurancePayments.filter(payment => payment.id.includes('IP'));
+    // Placeholder dataset (empty until backend integration)
+    const allInsurancePayments: InsurancePayment[] = [];
+    const claims = allInsurancePayments.filter(payment => payment.id.includes('IP'));
 
     const filteredClaims = claims.filter(claim => {
         if (filter === 'all') return true;
@@ -37,9 +49,9 @@ export default function InsuranceClaims() {
     const handleApproveClaim = async (claim: any) => {
         setApprovingClaim(claim.id);
         // In a real implementation, we would need the insurance capability ID and invoice ID
-        // For now, we'll use mock data and show the functionality
-        const mockInsuranceCapId = "0x1234567890abcdef"; // This would come from user's insurance capability
-        const mockInvoiceId = claim.id; // This would be the actual invoice ID
+        // TODO: Replace placeholders with actual capability and invoice IDs
+        const mockInsuranceCapId = "";
+        const mockInvoiceId = claim.id;
         const mockClaimId = claim.claimId;
 
         try {

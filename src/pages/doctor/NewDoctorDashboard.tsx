@@ -6,7 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { mockMedicalRecords, mockPatients, mockInstitutions } from "@/data/mockData";
+interface MedicalRecord {
+  id: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string;
+  institutionId: string;
+  diagnosis: string;
+  treatment: string;
+  visitDate: string;
+  totalCost: number;
+  insuranceCoverage: number;
+  patientResponsibility: number;
+}
+
+interface PatientRef { id: string; name: string; }
+interface InstitutionRef { id: string; name: string; }
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -66,8 +81,13 @@ export default function NewDoctorDashboard() {
     instructions: ''
   });
 
+  // Placeholder datasets (empty until backend integration)
+  const allMedicalRecords: MedicalRecord[] = [];
+  const allPatients: PatientRef[] = [];
+  const allInstitutions: InstitutionRef[] = [];
+
   // Filter medical records for current doctor
-  const doctorRecords = mockMedicalRecords.filter(record => record.doctorId === user?.id);
+  const doctorRecords = allMedicalRecords.filter(record => record.doctorId === user?.id);
   const recentRecords = doctorRecords.slice(0, 3);
 
   // Calculate stats
@@ -288,7 +308,7 @@ export default function NewDoctorDashboard() {
                     <SelectValue placeholder="Select patient" />
                   </SelectTrigger>
                   <SelectContent>
-                    {mockPatients.map((patient) => (
+                    {allPatients.map((patient) => (
                       <SelectItem key={patient.id} value={patient.id}>
                         {patient.name}
                       </SelectItem>

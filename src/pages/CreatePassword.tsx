@@ -44,7 +44,7 @@ export default function CreatePassword() {
         setIsLoading(true);
 
         try {
-            // Mock password creation - in real app, this would call an API with the token
+            // TODO: Connect password creation to backend API with token
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
             setPasswordSet(true);

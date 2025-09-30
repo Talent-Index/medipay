@@ -1,7 +1,25 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockInvoices, mockInsurancePayments, mockTransactions } from "@/data/mockData";
+interface Invoice {
+  id: string;
+  insuranceClaimId?: string;
+}
+
+interface InsurancePayment {
+  id: string;
+  patientId: string;
+  institutionId: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+  processedDate: string;
+}
+
+interface Transaction {
+  id: string;
+  invoiceId: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,12 +39,10 @@ export default function InsuranceDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Filter data for current insurance company
-  const insurancePayments = mockInsurancePayments.filter(payment => payment.id.includes('IP'));
-  const relatedInvoices = mockInvoices.filter(invoice => invoice.insuranceClaimId);
-  const relatedTransactions = mockTransactions.filter(transaction =>
-    relatedInvoices.some(invoice => invoice.id === transaction.invoiceId)
-  );
+  // Placeholder datasets (empty until backend integration)
+  const insurancePayments: InsurancePayment[] = [];
+  const relatedInvoices: Invoice[] = [];
+  const relatedTransactions: Transaction[] = [];
 
   // Calculate stats
   const totalPayments = insurancePayments
