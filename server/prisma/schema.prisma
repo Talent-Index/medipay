@@ -133,8 +133,8 @@ model InsurancePackage {
   updatedAt     DateTime @updatedAt
 
   // Relations
-  patientInsurance InsurancePackageService[]
-  services         InsurancePackageService[]
+  patientInsurance PatientInsurance[]
+  services         InsurancePackageService[] @relation("InsuranceServices")
 
   @@map("insurance_packages")
 }
@@ -164,7 +164,7 @@ model InsurancePackageService {
   createdAt           DateTime @default(now())
 
   // Relations
-  insurancePackage InsurancePackage @relation(fields: [insurancePackageId], references: [id])
+  insurancePackage InsurancePackage @relation("InsuranceServices", fields: [insurancePackageId], references: [id])
 
   @@map("insurance_package_services")
 }
