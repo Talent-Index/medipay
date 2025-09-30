@@ -14,6 +14,11 @@ import NotFound from "./pages/NotFound";
 import NewDoctorDashboard from "./pages/doctor/NewDoctorDashboard";
 import InstitutionDashboard from "./pages/institution/InstitutionDashboard";
 import InsuranceDashboard from "./pages/insurance/InsuranceDashboard";
+import InsuranceClaims from "./pages/insurance/InsuranceClaims";
+import InsuranceTransactions from "./pages/insurance/InsuranceTransactions";
+import InsurancePolicies from "./pages/insurance/InsurancePolicies";
+import InsurancePatients from "./pages/insurance/InsurancePatients";
+import InsuranceSettings from "./pages/insurance/InsuranceSettings";
 import UserManagement from "./components/institution/UserManagement";
 import ProductManagement from "./components/institution/ProductManagement";
 
@@ -35,7 +40,7 @@ const Router = () => (
             <Route index element={<PatientDashboard />} />
             <Route path="invoices" element={<PatientInvoices />} />
             <Route path="transactions" element={<div>Patient Transactions</div>} />
-            <Route path="profile" element={<div>Patient Profile</div>} />
+            <Route path="records" element={<div>Medical Records</div>} />
             <Route path="settings" element={<div>Patient Settings</div>} />
         </Route>
 
@@ -48,11 +53,8 @@ const Router = () => (
             <Route index element={<NewDoctorDashboard />} />
             <Route path="legacy" element={<DoctorDashboard />} />
             <Route path="create" element={<div>Create Invoice</div>} />
-            <Route path="invoices" element={<div>Doctor Invoices</div>} />
             <Route path="records" element={<div>Medical Records</div>} />
             <Route path="prescriptions" element={<div>Prescriptions</div>} />
-            <Route path="reports" element={<div>Doctor Reports</div>} />
-            <Route path="profile" element={<div>Doctor Profile</div>} />
             <Route path="settings" element={<div>Doctor Settings</div>} />
         </Route>
 
@@ -67,8 +69,6 @@ const Router = () => (
             <Route path="insurance-payments" element={<div>Insurance Payments</div>} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="reports" element={<div>Financial Reports</div>} />
-            <Route path="profile" element={<div>Institution Profile</div>} />
             <Route path="settings" element={<div>Institution Settings</div>} />
         </Route>
 
@@ -79,11 +79,11 @@ const Router = () => (
             </ProtectedRoute>
         }>
             <Route index element={<InsuranceDashboard />} />
-            <Route path="claims" element={<div>Insurance Claims</div>} />
-            <Route path="transactions" element={<div>Patient Transactions</div>} />
-            <Route path="reports" element={<div>Analytics & Reports</div>} />
-            <Route path="profile" element={<div>Insurance Profile</div>} />
-            <Route path="settings" element={<div>Insurance Settings</div>} />
+            <Route path="claims" element={<InsuranceClaims />} />
+            <Route path="transactions" element={<InsuranceTransactions />} />
+            <Route path="policies" element={<InsurancePolicies />} />
+            <Route path="patients" element={<InsurancePatients />} />
+            <Route path="settings" element={<InsuranceSettings />} />
         </Route>
 
         {/* Catch-all */}
