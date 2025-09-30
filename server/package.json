@@ -10,7 +10,11 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "verify:rls": "tsx verify-rls.ts"
+    "verify:rls": "tsx verify-rls.ts",
+    "test": "tsx tests/api.test.ts",
+    "test:api": "tsx tests/api.test.ts",
+    "test:rls": "tsx verify-rls.ts",
+    "test:watch": "tsx watch tests/api.test.ts"
   },
   "keywords": [],
   "author": "",
