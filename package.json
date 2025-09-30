@@ -8,7 +8,13 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm run test:integration",
+    "test:setup": "bash tests/setup.sh",
+    "test:integration": "tsx tests/integration.test.ts",
+    "test:e2e": "bash tests/e2e.test.sh",
+    "test:contracts": "bash tests/contract.test.sh",
+    "test:all": "npm run test:setup && npm run test:contracts && npm run test:e2e && npm run test:integration"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

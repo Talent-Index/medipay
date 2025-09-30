@@ -117,57 +117,66 @@ Frontend (React) → API Layer (Express + RLS) → Database (PostgreSQL)
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Node.js v18+
-- npm v8+
-- PostgreSQL (Neon account)
-- Sui Wallet browser extension
-
-### Installation
+### Automated Setup (Recommended)
 
 ```bash
 # Clone repository
 git clone https://github.com/yourusername/medipay.git
 cd medipay
 
-# Install frontend dependencies
-npm install
+# Run quick start script
+bash quick-start.sh
 
-# Install backend dependencies
-cd server
-npm install
+# Start backend (Terminal 1)
+cd server && npm run dev
 
-# Setup environment variables
-cp .env.example .env
-# Edit .env with your database URL
-
-# Run database migrations
-npm run prisma:migrate
-
-# Verify RLS is enabled
-npm run verify:rls
+# Start frontend (Terminal 2)
+npm run dev
 ```
 
-### Start Development
+### Manual Setup
+
+**Prerequisites:**
+- Node.js v18+
+- npm v8+
+- PostgreSQL (Neon account recommended)
+- Sui Wallet browser extension
+
+**Steps:**
 
 ```bash
-# Terminal 1 - Backend
-cd server
-npm run dev
-# Runs on http://localhost:4000
+# 1. Install dependencies
+npm install
+cd server && npm install && cd ..
 
-# Terminal 2 - Frontend
-npm run dev  
-# Runs on http://localhost:5173
+# 2. Setup environment
+cp env.example .env
+cp server/env.example server/.env
+# Edit both .env files with your configuration
+
+# 3. Setup database
+cd server
+npm run prisma:generate
+npm run prisma:migrate
+npm run verify:rls
+cd ..
+
+# 4. Start development
+# Terminal 1 - Backend
+cd server && npm run dev
+
+# Terminal 2 - Frontend  
+npm run dev
 ```
 
 ### First Steps
 
-1. Open http://localhost:5173
+1. Open http://localhost:8080
 2. Click "Connect Sui Wallet"
 3. Select your role
 4. Explore the dashboard!
+
+📚 **Detailed Setup:** See [SETUP_GUIDE.md](SETUP_GUIDE.md)
 
 ---
 
@@ -206,10 +215,18 @@ medipay/
 ### Frontend Commands
 
 ```bash
-npm run dev        # Start dev server
-npm run build      # Build for production
-npm run preview    # Preview build
-npm run lint       # Lint code
+npm run dev              # Start dev server
+npm run build            # Build for production
+npm run preview          # Preview build
+npm run lint             # Lint code
+
+# Testing
+npm run test             # Run integration tests
+npm run test:all         # Run all test suites
+npm run test:e2e         # End-to-end tests
+npm run test:integration # Integration tests
+npm run test:contracts   # Smart contract tests
+npm run test:setup       # Verify environment setup
 ```
 
 ### Backend Commands
@@ -217,12 +234,20 @@ npm run lint       # Lint code
 ```bash
 cd server
 
+# Development
 npm run dev                # Start dev server
 npm run build              # Build TypeScript
+npm run start              # Start production server
+
+# Database
 npm run prisma:generate    # Generate Prisma client
 npm run prisma:migrate     # Run migrations
 npm run prisma:studio      # Open Prisma Studio
+
+# Testing & Security
 npm run verify:rls         # Verify RLS status
+npm run test:api           # Run API tests
+npm run test:rls           # Test RLS policies
 ```
 
 ### Smart Contract Commands
@@ -234,6 +259,25 @@ sui move build     # Build contracts
 sui move test      # Test contracts
 sui client publish # Deploy contracts
 ```
+
+### Testing Commands
+
+```bash
+# Run comprehensive test suite
+bash run-tests.sh
+
+# Individual test suites
+npm run test:setup       # Environment setup check
+npm run test:contracts   # Smart contract tests
+npm run test:e2e        # End-to-end tests
+npm run test:integration # Integration tests
+cd server && npm run test:api  # API tests
+
+# Quick setup
+bash quick-start.sh
+```
+
+📚 **Full Testing Guide:** See [TESTING.md](TESTING.md)
 
 ---
 
@@ -443,15 +487,24 @@ await executeTransaction(txb);
 
 ## 📚 Documentation
 
-### Main Docs
-- [README.md](README.md) - This file
-- [SUI_INTEGRATION.md](SUI_INTEGRATION.md) - Blockchain guide
+### Main Documentation
+- [README.md](README.md) - This file (Overview & API docs)
+- [SETUP_GUIDE.md](SETUP_GUIDE.md) - **Complete setup & configuration guide**
+- [TESTING.md](TESTING.md) - **Comprehensive testing guide**
+- [SUI_INTEGRATION.md](SUI_INTEGRATION.md) - Blockchain integration guide
 
-### Backend Docs
-- [README_RLS.md](server/README_RLS.md) - RLS documentation
-- [RLS_QUICK_START.md](server/RLS_QUICK_START.md) - Quick start
-- [RLS_GUIDE.md](server/RLS_GUIDE.md) - Implementation guide
-- [RLS_TESTING.md](server/RLS_TESTING.md) - Testing guide
+### Backend Documentation
+- [README_RLS.md](server/README_RLS.md) - Row Level Security overview
+- [RLS_QUICK_START.md](server/RLS_QUICK_START.md) - RLS quick start
+- [RLS_GUIDE.md](server/RLS_GUIDE.md) - RLS implementation guide
+- [RLS_TESTING.md](server/RLS_TESTING.md) - RLS testing guide
+
+### Integration & Reference
+- [INTEGRATION_SUMMARY.md](INTEGRATION_SUMMARY.md) - **Complete integration overview**
+- [API_REFERENCE.md](API_REFERENCE.md) - **Full API reference**
+- [API Client](src/lib/api.ts) - Frontend API integration
+- [API Hooks](src/hooks/useApi.ts) - React hooks for API
+- [Environment Examples](env.example) - Configuration templates
 
 ---
 
