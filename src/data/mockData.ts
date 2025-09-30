@@ -319,6 +319,43 @@ export const mockInstitutionUsers: InstitutionUser[] = [
   }
 ];
 
+export interface Policy {
+  id: string;
+  name: string;
+  description: string;
+  services: { service: string; coverageAmount: number }[];
+  premium: number;
+  active: boolean;
+}
+
+export const mockPolicies: Policy[] = [
+  {
+    id: 'POL-001',
+    name: 'Basic Health Coverage',
+    description: 'Standard health insurance coverage for common medical services',
+    services: [
+      { service: 'General Consultation', coverageAmount: 120 },
+      { service: 'Blood Test', coverageAmount: 68 },
+      { service: 'X-Ray', coverageAmount: 80 }
+    ],
+    premium: 150,
+    active: true
+  },
+  {
+    id: 'POL-002',
+    name: 'Premium Health Coverage',
+    description: 'Comprehensive health insurance with extensive coverage',
+    services: [
+      { service: 'General Consultation', coverageAmount: 150 },
+      { service: 'Blood Test', coverageAmount: 85 },
+      { service: 'X-Ray', coverageAmount: 100 },
+      { service: 'MRI', coverageAmount: 500 }
+    ],
+    premium: 300,
+    active: true
+  }
+];
+
 export const mockProducts: Product[] = [
   {
     id: 'PROD-001',

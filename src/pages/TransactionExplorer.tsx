@@ -4,19 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockTransactions } from "@/data/mockData";
-import { Search, Filter, Download, Activity, Link, Shield, Home } from "lucide-react";
+import { useUserTransactions } from "@/hooks";
+import { Search, Filter, Download, Activity, Link, Shield, Home, Loader2 } from "lucide-react";
 
 export default function TransactionExplorer() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const { transactions, isLoading, error } = useUserTransactions();
 
   // Filter transactions by search term
-  const filteredTransactions = mockTransactions.filter(transaction =>
-    transaction.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transaction.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transaction.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    transaction.id.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTransactions = transactions.filter(transaction =>
+    transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    transaction.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatHash = (hash?: string) => {
@@ -73,7 +73,7 @@ export default function TransactionExplorer() {
           </div>
           <h1 className="text-4xl font-bold mb-4">Transaction Explorer</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Complete transparency of all medical transactions on the MediPay network. 
+            Complete transparency of all medical transactions on the MediPay network.
             View real-time payment status and blockchain verification.
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function TransactionExplorer() {
               <div className="w-12 h-12 rounded-xl bg-gradient-medical flex items-center justify-center mx-auto mb-3">
                 <Activity className="w-6 h-6 text-white" />
               </div>
-              <p className="text-2xl font-bold text-primary">{mockTransactions.length}</p>
+              <p className="text-2xl font-bold text-primary">{transactions.length}</p>
               <p className="text-sm text-muted-foreground">Total Transactions</p>
             </CardContent>
           </Card>
@@ -96,7 +96,7 @@ export default function TransactionExplorer() {
                 <Shield className="w-6 h-6 text-paid" />
               </div>
               <p className="text-2xl font-bold text-paid">
-                {mockTransactions.filter(t => t.status === 'confirmed').length}
+                {transactions.filter(t => t.status === 'confirmed').length}
               </p>
               <p className="text-sm text-muted-foreground">Confirmed</p>
             </CardContent>
@@ -108,7 +108,7 @@ export default function TransactionExplorer() {
                 <Link className="w-6 h-6 text-pending" />
               </div>
               <p className="text-2xl font-bold text-pending">
-                {mockTransactions.filter(t => t.status === 'pending').length}
+                {transactions.filter(t => t.status === 'pending').length}
               </p>
               <p className="text-sm text-muted-foreground">Pending</p>
             </CardContent>
@@ -120,7 +120,7 @@ export default function TransactionExplorer() {
                 <Activity className="w-6 h-6 text-primary" />
               </div>
               <p className="text-2xl font-bold text-primary">
-                ${mockTransactions.reduce((sum, t) => sum + t.amount, 0).toLocaleString()}
+                ${transactions.reduce((sum, t) => sum + (t.amount || 0), 0).toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground">Total Volume</p>
             </CardContent>
@@ -172,10 +172,10 @@ export default function TransactionExplorer() {
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-semibold text-lg">{transaction.service}</h3>
+                          <h3 className="font-semibold text-lg">{transaction.invoiceDetails?.serviceDescription || transaction.description}</h3>
                           <StatusBadge status={transaction.status} />
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
                             <p className="text-muted-foreground">Transaction ID</p>
@@ -215,7 +215,7 @@ export default function TransactionExplorer() {
                       <div className="text-right">
                         <p className="text-3xl font-bold">${transaction.amount}</p>
                         <p className="text-sm text-muted-foreground">Amount</p>
-                        
+
                         {transaction.status === 'confirmed' && (
                           <div className="mt-2 flex items-center gap-1 text-confirmed text-sm">
                             <Shield className="w-4 h-4" />
@@ -234,7 +234,7 @@ export default function TransactionExplorer() {
                   {searchTerm ? 'No matching transactions' : 'No transactions available'}
                 </h3>
                 <p className="text-muted-foreground">
-                  {searchTerm 
+                  {searchTerm
                     ? 'Try adjusting your search terms'
                     : 'Transactions will appear here as they are processed'
                   }
@@ -263,7 +263,7 @@ export default function TransactionExplorer() {
                   All transactions are permanently recorded and cannot be altered
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-12 h-12 rounded-xl bg-gradient-medical flex items-center justify-center mx-auto mb-3">
                   <Activity className="w-6 h-6 text-white" />
@@ -273,7 +273,7 @@ export default function TransactionExplorer() {
                   Instant proof-of-stake verification for all payments
                 </p>
               </div>
-              
+
               <div className="text-center">
                 <div className="w-12 h-12 rounded-xl bg-gradient-medical flex items-center justify-center mx-auto mb-3">
                   <Link className="w-6 h-6 text-white" />

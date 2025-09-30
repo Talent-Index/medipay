@@ -4,13 +4,13 @@ import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { 
-  Menu, 
-  LogOut, 
-  User, 
-  Activity, 
-  CreditCard, 
-  FileText, 
+import {
+  Menu,
+  LogOut,
+  User,
+  Activity,
+  CreditCard,
+  FileText,
   Settings,
   BarChart3,
   PlusCircle,
@@ -21,7 +21,8 @@ import {
   Clipboard,
   Pill,
   Package,
-  UserCog
+  UserCog,
+  Users2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,8 +46,7 @@ export default function DashboardLayout() {
   const patientNavItems: NavItem[] = [
     { title: "Dashboard", href: "/patient", icon: Activity },
     { title: "Invoices", href: "/patient/invoices", icon: FileText },
-    { title: "Transactions", href: "/patient/transactions", icon: CreditCard },
-    { title: "Profile", href: "/patient/profile", icon: User },
+    { title: "Medical Records", href: "/patient/records", icon: CreditCard },
     { title: "Settings", href: "/patient/settings", icon: Settings },
   ];
 
@@ -54,10 +54,6 @@ export default function DashboardLayout() {
     { title: "Dashboard", href: "/doctor", icon: Stethoscope },
     { title: "Medical Records", href: "/doctor/records", icon: Clipboard },
     { title: "Prescriptions", href: "/doctor/prescriptions", icon: Pill },
-    { title: "Create Invoice", href: "/doctor/create", icon: PlusCircle },
-    { title: "Invoices", href: "/doctor/invoices", icon: FileText },
-    { title: "Reports", href: "/doctor/reports", icon: BarChart3 },
-    { title: "Profile", href: "/doctor/profile", icon: User },
     { title: "Settings", href: "/doctor/settings", icon: Settings },
   ];
 
@@ -67,8 +63,6 @@ export default function DashboardLayout() {
     { title: "Insurance Payments", href: "/institution/insurance-payments", icon: Shield },
     { title: "Products", href: "/institution/products", icon: Package },
     { title: "Users", href: "/institution/users", icon: UserCog },
-    { title: "Reports", href: "/institution/reports", icon: BarChart3 },
-    { title: "Profile", href: "/institution/profile", icon: User },
     { title: "Settings", href: "/institution/settings", icon: Settings },
   ];
 
@@ -76,8 +70,8 @@ export default function DashboardLayout() {
     { title: "Dashboard", href: "/insurance", icon: Shield },
     { title: "Claims", href: "/insurance/claims", icon: FileText },
     { title: "Transactions", href: "/insurance/transactions", icon: CreditCard },
-    { title: "Reports", href: "/insurance/reports", icon: BarChart3 },
-    { title: "Profile", href: "/insurance/profile", icon: User },
+    { title: "Patients", href: "/insurance/patients", icon: Users2 },
+    { title: "Policies", href: "/insurance/policies", icon: BarChart3 },
     { title: "Settings", href: "/insurance/settings", icon: Settings },
   ];
 
@@ -150,7 +144,7 @@ export default function DashboardLayout() {
             <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
           </div>
         </div>
-        
+
         <Button
           variant="outline"
           size="sm"
@@ -195,11 +189,11 @@ export default function DashboardLayout() {
                   Welcome back, {user?.name}
                 </h1>
               </div>
-              
+
               <Button variant="ghost" size="icon">
                 <Search className="w-5 h-5" />
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -209,7 +203,7 @@ export default function DashboardLayout() {
                 <LogOut className="w-4 h-4" />
                 Logout
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="icon"

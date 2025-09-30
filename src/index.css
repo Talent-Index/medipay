@@ -63,7 +63,7 @@ All colors MUST be HSL.
     --gradient-medical: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
     --gradient-hero: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--confirmed)) 100%);
     --gradient-card: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--accent)) 100%);
-    
+
     /* Shadows for depth */
     --shadow-soft: 0 4px 6px -1px hsl(var(--primary) / 0.1);
     --shadow-medical: 0 10px 25px -3px hsl(var(--primary) / 0.1);
@@ -144,31 +144,43 @@ All colors MUST be HSL.
   .medical-card {
     @apply bg-gradient-to-br from-card to-accent border border-border rounded-xl shadow-soft;
   }
-  
+
   .status-badge {
     @apply px-3 py-1 rounded-full text-sm font-medium;
   }
-  
+
   .status-pending {
     @apply bg-warning/10 text-warning border border-warning/20;
   }
-  
+
   .status-paid {
     @apply bg-paid/10 text-paid border border-paid/20;
   }
-  
+
   .status-confirmed {
     @apply bg-confirmed/10 text-confirmed border border-confirmed/20;
   }
-  
+
+  .status-failed {
+    @apply bg-destructive/10 text-destructive border border-destructive/20;
+  }
+
+  .status-approved {
+    @apply bg-success/10 text-success border border-success/20;
+  }
+
+  .status-partially-paid {
+    @apply bg-warning/10 text-warning border border-warning/20;
+  }
+
   .hero-gradient {
     background: var(--gradient-hero);
   }
-  
+
   .medical-shadow {
     box-shadow: var(--shadow-medical);
   }
-  
+
   .transition-smooth {
     transition: var(--transition-smooth);
   }

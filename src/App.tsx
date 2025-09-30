@@ -8,6 +8,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Router } from "./Routes";
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl } from '@mysten/sui/client';
+import { SuiWalletProvider } from "./contexts/SuiWalletContext";
 
 const queryClient = new QueryClient();
 const networks = {
@@ -20,13 +21,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <SuiClientProvider networks={networks} defaultNetwork="devnet">
       <WalletProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Router />
-          </BrowserRouter>
-        </TooltipProvider>
+        <SuiWalletProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Router />
+            </BrowserRouter>
+          </TooltipProvider>
+        </SuiWalletProvider>
       </WalletProvider>
     </SuiClientProvider>
   </QueryClientProvider>

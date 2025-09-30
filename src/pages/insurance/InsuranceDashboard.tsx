@@ -4,11 +4,11 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { mockInvoices, mockInsurancePayments, mockTransactions } from "@/data/mockData";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
-import { 
-  Shield, 
-  FileText, 
-  Activity, 
-  TrendingUp, 
+import {
+  Shield,
+  FileText,
+  Activity,
+  TrendingUp,
   Calendar,
   DollarSign,
   Users,
@@ -24,7 +24,7 @@ export default function InsuranceDashboard() {
   // Filter data for current insurance company
   const insurancePayments = mockInsurancePayments.filter(payment => payment.id.includes('IP'));
   const relatedInvoices = mockInvoices.filter(invoice => invoice.insuranceClaimId);
-  const relatedTransactions = mockTransactions.filter(transaction => 
+  const relatedTransactions = mockTransactions.filter(transaction =>
     relatedInvoices.some(invoice => invoice.id === transaction.invoiceId)
   );
 
@@ -32,11 +32,11 @@ export default function InsuranceDashboard() {
   const totalPayments = insurancePayments
     .filter(payment => payment.status === 'paid')
     .reduce((sum, payment) => sum + payment.amount, 0);
-  
+
   const pendingPayments = insurancePayments
     .filter(payment => payment.status === 'pending')
     .reduce((sum, payment) => sum + payment.amount, 0);
-  
+
   const totalClaims = insurancePayments.length;
   const totalPatients = new Set(insurancePayments.map(payment => payment.patientId)).size;
   const totalInstitutions = new Set(insurancePayments.map(payment => payment.institutionId)).size;
@@ -122,7 +122,7 @@ export default function InsuranceDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
+            <Button
               className="h-auto p-6 flex-col gap-3 bg-gradient-medical hover:scale-105 transition-smooth"
               onClick={() => navigate('/insurance/claims')}
             >
@@ -132,8 +132,8 @@ export default function InsuranceDashboard() {
                 <p className="text-sm opacity-90">All insurance claims</p>
               </div>
             </Button>
-            
-            <Button 
+
+            <Button
               variant="outline"
               className="h-auto p-6 flex-col gap-3 hover:scale-105 transition-smooth"
               onClick={() => navigate('/insurance/transactions')}
@@ -144,16 +144,16 @@ export default function InsuranceDashboard() {
                 <p className="text-sm text-muted-foreground">View all transactions</p>
               </div>
             </Button>
-            
-            <Button 
+
+            <Button
               variant="outline"
               className="h-auto p-6 flex-col gap-3 hover:scale-105 transition-smooth"
-              onClick={() => navigate('/insurance/reports')}
+              onClick={() => navigate('/insurance/policies')}
             >
               <TrendingUp className="w-8 h-8" />
               <div className="text-center">
-                <p className="font-semibold">Analytics</p>
-                <p className="text-sm text-muted-foreground">Reports & insights</p>
+                <p className="font-semibold">Policies</p>
+                <p className="text-sm text-muted-foreground">Manage coverage</p>
               </div>
             </Button>
           </div>
@@ -173,7 +173,7 @@ export default function InsuranceDashboard() {
                 Latest insurance claims and payments
               </CardDescription>
             </div>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => navigate('/insurance/claims')}
             >
@@ -189,7 +189,7 @@ export default function InsuranceDashboard() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
                       <h4 className="font-semibold">{payment.service}</h4>
-                      <StatusBadge status={payment.status} />
+                      <StatusBadge status={payment.status === 'paid' ? 'approved' : payment.status === 'confirmed' ? 'confirmed' : payment.status === 'pending' ? 'pending' : 'pending'} />
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Patient: {payment.patientName} • Institution: {payment.institutionName}
