@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - represents all users in the system
+model User {
+  id        String   @id @default(cuid())
+  address   String   @unique // Blockchain wallet address
+  role      UserRole @default(PATIENT)
+  name      String
+  email     String   @unique
+  phone     String?
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  patientInvoices     Invoice[]     @relation("PatientInvoices")
+  doctorInvoices      Invoice[]     @relation("DoctorInvoices")
+  institutionInvoices Invoice[]     @relation("InstitutionInvoices")
+  medicalRecords      MedicalRecord[] @relation("PatientMedicalRecords")
+  doctorMedicalRecords MedicalRecord[] @relation("DoctorMedicalRecords")
+  prescriptions       Prescription[] @relation("PatientPrescriptions")
+  doctorPrescriptions Prescription[] @relation("DoctorPrescriptions")
+  paymentRecords      PaymentRecord[]
+  patientInsurance    PatientInsurance[]
+  institutionStaff    InstitutionStaff[]
+  institutionProducts Product[]
+
+  @@map("users")
+}
+
+// Invoice model - represents medical service invoices
+model Invoice {
+  id                      String        @id @default(cuid())
+  patientAddress          String
+  doctorAddress           String
+  institutionAddress      String
+  serviceDescription      String
+  totalAmount             Decimal       @db.Decimal(10, 2)
+  insuranceCoveredAmount  Decimal       @db.Decimal(10, 2)
+  patientCopayAmount      Decimal       @db.Decimal(10, 2)
+  paymentType             PaymentType
+  status                  InvoiceStatus @default(PENDING)
+  insuranceClaimId        String?
+  createdAt               DateTime      @default(now())
+  approvedAt              DateTime?
+  insurancePaidAt         DateTime?
+  patientPaidAt           DateTime?
+
+  // Relations
+  patient     User            @relation("PatientInvoices", fields: [patientAddress], references: [address])
+  doctor      User            @relation("DoctorInvoices", fields: [doctorAddress], references: [address])
+  institution User            @relation("InstitutionInvoices", fields: [institutionAddress], references: [address])
+  payments    PaymentRecord[]
+
+  @@map("invoices")
+}
+
+// Medical Record model - represents encrypted medical records
+model MedicalRecord {
+  id                  String   @id @default(cuid())
+  patientAddress      String
+  doctorAddress       String
+  institutionAddress  String
+  encryptedDataHash   String   // Hash of encrypted medical data
+  storageReference    String   // Reference to encrypted data storage
+  visitDate           DateTime
+  createdAt           DateTime @default(now())
+
+  // Relations
+  patient     User @relation("PatientMedicalRecords", fields: [patientAddress], references: [address])
+  doctor      User @relation("DoctorMedicalRecords", fields: [doctorAddress], references: [address])
+
+  @@map("medical_records")
+}
+
+// Prescription model - represents medication prescriptions
+model Prescription {
+  id              String   @id @default(cuid())
+  patientAddress  String
+  doctorAddress   String
+  medicationName  String
+  dosage          String
+  frequency       String
+  durationDays    Int
+  quantity        Int
+  instructionsHash String  // Hash of encrypted instructions
+  createdAt       DateTime @default(now())
+
+  // Relations
+  patient User @relation("PatientPrescriptions", fields: [patientAddress], references: [address])
+  doctor  User @relation("DoctorPrescriptions", fields: [doctorAddress], references: [address])
+
+  @@map("prescriptions")
+}
+
+// Payment Record model - represents individual payments
+model PaymentRecord {
+  id          String      @id @default(cuid())
+  invoiceId   String
+  amount      Decimal     @db.Decimal(10, 2)
+  paymentType PaymentType
+  timestamp   DateTime    @default(now())
+  payerAddress String
+
+  // Relations
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  payer   User    @relation(fields: [payerAddress], references: [address])
+
+  @@map("payment_records")
+}
+
+// Insurance Package model - represents available insurance plans
+model InsurancePackage {
+  id            String   @id @default(cuid())
+  name          String
+  description   String
+  premiumAmount Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  patientInsurance InsurancePackageService[]
+  services         InsurancePackageService[]
+
+  @@map("insurance_packages")
+}
+
+// Patient Insurance model - represents patient insurance coverage
+model PatientInsurance {
+  id                  String   @id @default(cuid())
+  patientAddress      String
+  insurancePackageId  String
+  coverageStart       DateTime
+  coverageEnd         DateTime
+  createdAt           DateTime @default(now())
+
+  // Relations
+  patient         User            @relation(fields: [patientAddress], references: [address])
+  insurancePackage InsurancePackage @relation(fields: [insurancePackageId], references: [id])
+
+  @@map("patient_insurance")
+}
+
+// Insurance Package Service model - represents services covered by insurance
+model InsurancePackageService {
+  id                  String   @id @default(cuid())
+  insurancePackageId  String
+  serviceDescription  String
+  coverageAmount      Decimal  @db.Decimal(10, 2)
+  createdAt           DateTime @default(now())
+
+  // Relations
+  insurancePackage InsurancePackage @relation(fields: [insurancePackageId], references: [id])
+
+  @@map("insurance_package_services")
+}
+
+// Institution Staff model - represents staff members of institutions
+model InstitutionStaff {
+  id            String   @id @default(cuid())
+  institutionId String
+  userId        String
+  role          String   // 'admin' | 'manager' | 'staff'
+  status        String   @default("active") // 'active' | 'inactive'
+  permissions   String[] // Array of permission strings
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("institution_staff")
+}
+
+// Product model - represents medical products/services offered by institutions
+model Product {
+  id            String   @id @default(cuid())
+  institutionId String
+  name          String
+  description   String
+  category      String
+  unitPrice     Decimal  @db.Decimal(10, 2)
+  unit          String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  institution User @relation(fields: [institutionId], references: [address])
+
+  @@map("products")
+}
+
+// Transaction model - represents blockchain transactions
+model Transaction {
+  id              String   @id @default(cuid())
+  invoiceId       String?
+  type            String   // 'invoice' | 'medical_record' | 'prescription' | 'payment'
+  status          String   // 'pending' | 'confirmed' | 'failed' | 'approved' | 'partially_paid'
+  amount          Decimal? @db.Decimal(10, 2)
+  description     String
+  blockchainHash  String?  // Blockchain transaction hash
+  relatedId       String?  // Related entity ID
+  patientName     String?
+  doctorName      String?
+  proofOfStake    String?  // Proof of stake verification
+  createdAt       DateTime @default(now())
+
+  @@map("transactions")
+}
+
+// Enums
+enum UserRole {
+  PATIENT
+  DOCTOR
+  INSTITUTION
+  INSURANCE
+}
+
+enum PaymentType {
+  CASH
+  INSURANCE
+  SPLIT
+}
+
+enum InvoiceStatus {
+  PENDING
+  APPROVED
+  PAID
+  PARTIALLY_PAID
+}
