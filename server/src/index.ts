@@ -4,6 +4,7 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import cors from 'cors';
 import helmet from 'helmet';
 import { prisma, gracefullyShutdownPrisma } from './lib/prisma';
+import exampleRoutes from './routes/example.routes';
 
 // Load env from server/.env then fall back to repo root .env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
@@ -20,6 +21,9 @@ app.use(express.json());
 app.get('/health', (_req: Request, res: Response) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// API Routes with RLS protection
+app.use('/api', exampleRoutes);
 
 // Not found handler
 app.use((req: Request, res: Response) => {
