@@ -165,12 +165,7 @@ export default function Login() {
               </div>
             </div>
 
-            <div className="mt-6 p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-              <p className="font-medium mb-2">Demo Credentials:</p>
-              <p>Patient: patient@demo.com</p>
-              <p>Doctor: doctor@demo.com</p>
-              <p>Password: demo123</p>
-            </div>
+            {/* Demo credentials removed */}
           </CardContent>
         </Card>
       </div>

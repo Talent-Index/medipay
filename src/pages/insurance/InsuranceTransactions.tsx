@@ -1,7 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockTransactions } from "@/data/mockData";
+interface InsuranceTransaction {
+    id: string;
+    invoiceId: string;
+    patientName: string;
+    doctorName: string;
+    service: string;
+    amount: number;
+    status: 'pending' | 'paid' | 'confirmed';
+    timestamp: string;
+    blockchainHash?: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useUserTransactions } from "@/hooks/useUserTransactions";
 import { CreditCard, Eye, TrendingUp, Loader2 } from "lucide-react";
@@ -11,10 +21,8 @@ export default function InsuranceTransactions() {
     const { user } = useAuthStore();
     const [filter, setFilter] = useState('all');
 
-    // Filter transactions related to insurance
-    const transactions = mockTransactions.filter(transaction =>
-        transaction.service.includes('Consultation') || transaction.service.includes('Test') || transaction.service.includes('Cardiology')
-    );
+    // Placeholder: replace with real fetched data
+    const transactions: InsuranceTransaction[] = [];
 
     const filteredTransactions = transactions.filter(transaction => {
         if (filter === 'all') return true;

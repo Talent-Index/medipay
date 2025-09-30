@@ -2,7 +2,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockInvoices } from "@/data/mockData";
+interface Invoice {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+  createdAt: string;
+  paidAt?: string;
+  description?: string;
+  doctorName: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -20,8 +31,9 @@ export default function PatientDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Filter invoices for current user
-  const userInvoices = mockInvoices.filter(invoice => invoice.patientId === user?.id);
+  // Placeholder dataset (empty until backend integration)
+  const allInvoices: Invoice[] = [];
+  const userInvoices = allInvoices.filter(invoice => invoice.patientId === user?.id);
   const recentInvoices = userInvoices.slice(0, 3);
 
   // Calculate stats

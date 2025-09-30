@@ -1,0 +1,76 @@
+name: Direct merge to main
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: Branch to merge into main
+        required: true
+        default: amos
+  push:
+    branches:
+      - amos
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: direct-merge-main
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge source into main with conflict check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine source branch
+        id: src
+        run: |
+          if [ -n "${{ github.event.inputs.source_branch }}" ]; then
+            echo "branch=${{ github.event.inputs.source_branch }}" >> $GITHUB_OUTPUT
+          else
+            # On push workflow, use the pushed ref name
+            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all
+        run: |
+          git fetch origin +refs/heads/*:refs/remotes/origin/* --prune
+
+      - name: Abort if source branch equals main
+        run: |
+          if [ "${{ steps.src.outputs.branch }}" = "main" ]; then
+            echo "Source branch is 'main'; nothing to merge." >&2
+            exit 1
+          fi
+
+      - name: Check for merge conflicts (dry-run)
+        run: |
+          git checkout origin/main
+          git switch -c _merge_check_tmp
+          if ! git merge --no-commit --no-ff origin/${{ steps.src.outputs.branch }}; then
+            echo "Merge conflict detected between '${{ steps.src.outputs.branch }}' and 'main'." >&2
+            exit 2
+          fi
+          git merge --abort || true
+
+      - name: Perform merge and push
+        run: |
+          git checkout main || git checkout -b main origin/main
+          git merge --no-ff origin/${{ steps.src.outputs.branch }} -m "Auto-merged branch ${{ steps.src.outputs.branch }} into main"
+          git push origin main
+
+      - name: Output success
+        run: echo "Successfully merged '${{ steps.src.outputs.branch }}' into 'main'"
+
+

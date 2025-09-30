@@ -6,7 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { mockInstitutionUsers } from "@/data/mockData";
+interface InstitutionUser {
+  id: string;
+  institutionId: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'manager' | 'staff';
+  status: 'active' | 'inactive' | 'pending';
+  lastLogin?: string;
+  invitedAt: string;
+  permissions: string[];
+}
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -20,7 +30,6 @@ import {
   UserCog,
   User
 } from "lucide-react";
-import { InstitutionUser } from "@/data/mockData";
 
 export default function UserManagement() {
   const { user } = useAuthStore();
@@ -32,8 +41,9 @@ export default function UserManagement() {
     role: 'staff' as 'admin' | 'manager' | 'staff'
   });
 
-  // Filter users for current institution
-  const institutionUsers = mockInstitutionUsers.filter(u => u.institutionId === user?.id);
+  // Placeholder dataset (empty until backend integration)
+  const allInstitutionUsers: InstitutionUser[] = [];
+  const institutionUsers = allInstitutionUsers.filter(u => u.institutionId === user?.id);
   const isAdmin = institutionUsers.find(u => u.email === user?.email)?.role === 'admin';
 
   const handleInviteUser = () => {

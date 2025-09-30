@@ -7,7 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { mockProducts } from "@/data/mockData";
+interface Product {
+  id: string;
+  institutionId: string;
+  name: string;
+  description: string;
+  category: string;
+  unitPrice: number;
+  unit?: string;
+  isActive: boolean;
+  updatedAt: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -20,7 +30,6 @@ import {
   DollarSign,
   Tag
 } from "lucide-react";
-import { Product } from "@/data/mockData";
 
 export default function ProductManagement() {
   const { user } = useAuthStore();
@@ -37,8 +46,9 @@ export default function ProductManagement() {
     isActive: true
   });
 
-  // Filter products for current institution
-  const institutionProducts = mockProducts.filter(p => p.institutionId === user?.id);
+  // Placeholder dataset (empty until backend integration)
+  const allProducts: Product[] = [];
+  const institutionProducts = allProducts.filter(p => p.institutionId === user?.id);
   
   // Filter by search term and category
   const filteredProducts = institutionProducts.filter(product => {

@@ -30,7 +30,7 @@ export default function ForgotPassword() {
         setIsLoading(true);
 
         try {
-            // Mock password reset request - in real app, this would call an API
+            // TODO: Connect password reset to backend API
             await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
             setEmailSent(true);

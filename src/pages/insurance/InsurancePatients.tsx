@@ -5,7 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/authStore";
-import { mockInsurancePayments, mockPolicies } from "@/data/mockData";
+interface Policy {
+    id: string;
+    name: string;
+}
+
+interface InsurancePayment {
+    id: string;
+    patientId: string;
+    institutionId: string;
+    status: 'pending' | 'paid' | 'confirmed';
+    amount: number;
+    service: string;
+    patientName: string;
+    institutionName: string;
+    processedDate: string;
+    claimId: string;
+}
 import { StatusBadge } from "@/components/ui/status-badge";
 
 interface InsurancePatient {
@@ -33,12 +49,7 @@ export default function InsurancePatients() {
 
     // Load initial patients - replace with actual data fetching
     useEffect(() => {
-        // For demo, initialize with some mock insurance patients
-        const initialPatients: InsurancePatient[] = [
-            { id: '1', name: 'John Smith', email: 'john@example.com', phone: '555-0101', policyId: 'POL-001' },
-            { id: '5', name: 'Alice Cooper', email: 'alice@example.com', phone: '555-0102', policyId: 'POL-002' },
-        ];
-        setPatients(initialPatients);
+        setPatients([]);
     }, []);
 
     // Filter patients by search term
@@ -69,15 +80,19 @@ export default function InsurancePatients() {
         }
     };
 
+    // Placeholder datasets (empty until backend integration)
+    const policies: Policy[] = [];
+    const insurancePayments: InsurancePayment[] = [];
+
     // Get policy name by id
     const getPolicyName = (policyId: string) => {
-        const policy = mockPolicies.find(p => p.id === policyId);
+        const policy = policies.find(p => p.id === policyId);
         return policy ? policy.name : "Unknown Policy";
     };
 
     // Get payment status summary for patient
     const getPaymentStatus = (patientId: string) => {
-        const payments = mockInsurancePayments.filter(p => p.patientId === patientId);
+        const payments = insurancePayments.filter(p => p.patientId === patientId);
         if (payments.length === 0) return "No Payments";
         const paidCount = payments.filter(p => p.status === "paid").length;
         return `${paidCount} / ${payments.length} Paid`;
@@ -142,11 +157,15 @@ export default function InsurancePatients() {
                                 <SelectValue placeholder="Select a policy" />
                             </SelectTrigger>
                             <SelectContent>
-                                {mockPolicies.map(policy => (
-                                    <SelectItem key={policy.id} value={policy.id}>
-                                        {policy.name}
-                                    </SelectItem>
-                                ))}
+                                {policies.length === 0 ? (
+                                    <div className="p-2 text-sm text-muted-foreground">No policies available</div>
+                                ) : (
+                                    policies.map(policy => (
+                                        <SelectItem key={policy.id} value={policy.id}>
+                                            {policy.name}
+                                        </SelectItem>
+                                    ))
+                                )}
                             </SelectContent>
                         </Select>
                     </div>

@@ -3,7 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { mockInvoices } from "@/data/mockData";
+interface InvoiceData {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  institutionId: string;
+  service: string;
+  amount: number;
+  status: 'pending' | 'paid' | 'confirmed';
+  createdAt: string;
+  paidAt?: string;
+  description?: string;
+  doctorName: string;
+}
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -14,7 +26,7 @@ import {
   Calendar,
   Filter
 } from "lucide-react";
-import { Invoice } from "@/data/mockData";
+type Invoice = InvoiceData;
 import { PayInvoiceTransaction } from "@/components/sui/BlockchainTransaction";
 
 export default function PatientInvoices() {
@@ -22,8 +34,9 @@ export default function PatientInvoices() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter invoices for current user
-  const userInvoices = mockInvoices.filter(invoice => invoice.patientId === user?.id);
+  // Placeholder dataset (empty until backend integration)
+  const allInvoices: Invoice[] = [];
+  const userInvoices = allInvoices.filter(invoice => invoice.patientId === user?.id);
   
   // Filter by search term
   const filteredInvoices = userInvoices.filter(invoice =>
