@@ -11,7 +11,7 @@ export default function Landing() {
       icon: Shield,
       title: "Blockchain Security",
       description: "Every transaction is secured and verified through blockchain technology"
-    },
+    }, 
     {
       icon: Activity,
       title: "Real-time Tracking",
