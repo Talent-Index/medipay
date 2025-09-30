@@ -1,14 +1,11 @@
-name: Direct merge to main
+name: Auto-merge branches into main
 on:
   workflow_dispatch:
-    inputs:
-      source_branch:
-        description: Branch to merge into main
-        required: true
-        default: amos
   push:
-    branches:
-      - amos
+    branches-ignore:
+      - main
+  schedule:
+    - cron: '*/30 * * * *'
 
 permissions:
   contents: write
@@ -20,23 +17,13 @@ concurrency:
 
 jobs:
   merge:
-    name: Merge source into main with conflict check
+    name: Scan and merge all branches into main (conflict-safe)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Determine source branch
-        id: src
-        run: |
-          if [ -n "${{ github.event.inputs.source_branch }}" ]; then
-            echo "branch=${{ github.event.inputs.source_branch }}" >> $GITHUB_OUTPUT
-          else
-            # On push workflow, use the pushed ref name
-            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
-          fi
 
       - name: Configure git
         run: |
@@ -47,30 +34,53 @@ jobs:
         run: |
           git fetch origin +refs/heads/*:refs/remotes/origin/* --prune
 
-      - name: Abort if source branch equals main
+      - name: Find candidate branches
+        id: branches
+        shell: bash
         run: |
-          if [ "${{ steps.src.outputs.branch }}" = "main" ]; then
-            echo "Source branch is 'main'; nothing to merge." >&2
-            exit 1
-          fi
+          set -euo pipefail
+          git fetch origin +refs/heads/*:refs/remotes/origin/* --prune
+          mapfile -t BRANCHES < <(git for-each-ref --format='%(refname:short)' refs/remotes/origin | grep -v '^origin/HEAD$' | grep -v '^origin/main$')
+          printf "Found %d branches to evaluate\n" "${#BRANCHES[@]}"
+          # Emit as newline-separated for matrix-like consumption
+          {
+            for b in "${BRANCHES[@]}"; do echo "$b"; done
+          } > branches.txt
+          echo "count=${#BRANCHES[@]}" >> $GITHUB_OUTPUT
 
-      - name: Check for merge conflicts (dry-run)
+      - name: Merge all clean branches into main
+        if: steps.branches.outputs.count != '0'
+        shell: bash
         run: |
-          git checkout origin/main
-          git switch -c _merge_check_tmp
-          if ! git merge --no-commit --no-ff origin/${{ steps.src.outputs.branch }}; then
-            echo "Merge conflict detected between '${{ steps.src.outputs.branch }}' and 'main'." >&2
-            exit 2
-          fi
-          git merge --abort || true
+          set -euo pipefail
+          cat branches.txt | while read -r remote_branch; do
+            [ -z "$remote_branch" ] && continue
+            branch_name=${remote_branch#origin/}
+            if [ "$branch_name" = "main" ]; then
+              continue
+            fi
+            echo "\n=== Evaluating $branch_name ==="
 
-      - name: Perform merge and push
-        run: |
-          git checkout main || git checkout -b main origin/main
-          git merge --no-ff origin/${{ steps.src.outputs.branch }} -m "Auto-merged branch ${{ steps.src.outputs.branch }} into main"
-          git push origin main
+            # Always start from latest remote main
+            git fetch origin main
+            git checkout -B _merge_check_tmp origin/main
 
-      - name: Output success
-        run: echo "Successfully merged '${{ steps.src.outputs.branch }}' into 'main'"
+            if ! git merge --no-commit --no-ff "origin/$branch_name"; then
+              echo "Conflict detected: $branch_name -> main. Skipping."
+              git merge --abort || true
+              continue
+            fi
+
+            git merge --abort || true
+
+            # Perform the actual merge onto local main and push
+            git checkout -B main origin/main
+            git merge --no-ff "origin/$branch_name" -m "Auto-merged branch $branch_name into main"
+            git push origin main
+            echo "Merged $branch_name into main"
+          done
+
+      - name: Done
+        run: echo "Auto-merge run complete"
 
 
