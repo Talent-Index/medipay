@@ -195,47 +195,65 @@ export default function InsurancePolicies() {
 
             {/* Policies List */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {policies.map((policy) => (
-                    <Card key={policy.id} className="medical-card">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Shield className="w-5 h-5" />
-                                        {policy.name}
-                                    </CardTitle>
-                                    <CardDescription>{policy.description}</CardDescription>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-2xl font-bold text-primary">${policy.premium}</p>
-                                    <p className="text-sm text-muted-foreground">Monthly Premium</p>
-                                </div>
+                {policies.length === 0 ? (
+                    <Card className="medical-card col-span-full">
+                        <CardContent className="text-center py-12">
+                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                                <Shield className="w-8 h-8 text-muted-foreground" />
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <h4 className="font-semibold">Covered Services:</h4>
-                                <div className="space-y-2">
-                                    {policy.services.map((service, index) => (
-                                        <div key={index} className="flex justify-between items-center p-2 rounded bg-accent/50">
-                                            <span className="text-sm">{service.service}</span>
-                                            <span className="font-semibold">${service.coverageAmount}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex gap-2 pt-4">
-                                    <Button size="sm" variant="outline">
-                                        <Edit className="w-4 h-4 mr-2" />
-                                        Edit
-                                    </Button>
-                                    <Button size="sm" variant="outline">
-                                        View Details
-                                    </Button>
-                                </div>
-                            </div>
+                            <h3 className="text-lg font-semibold mb-2">No policies yet</h3>
+                            <p className="text-muted-foreground mb-4">
+                                Get started by creating your first insurance policy.
+                            </p>
+                            <Button onClick={() => setIsCreating(true)} className="bg-gradient-medical">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Create Your First Policy
+                            </Button>
                         </CardContent>
                     </Card>
-                ))}
+                ) : (
+                    policies.map((policy) => (
+                        <Card key={policy.id} className="medical-card">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Shield className="w-5 h-5" />
+                                            {policy.name}
+                                        </CardTitle>
+                                        <CardDescription>{policy.description}</CardDescription>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-2xl font-bold text-primary">${policy.premium}</p>
+                                        <p className="text-sm text-muted-foreground">Monthly Premium</p>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <h4 className="font-semibold">Covered Services:</h4>
+                                    <div className="space-y-2">
+                                        {policy.services.map((service, index) => (
+                                            <div key={index} className="flex justify-between items-center p-2 rounded bg-accent/50">
+                                                <span className="text-sm">{service.service}</span>
+                                                <span className="font-semibold">${service.coverageAmount}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2 pt-4">
+                                        <Button size="sm" variant="outline">
+                                            <Edit className="w-4 h-4 mr-2" />
+                                            Edit
+                                        </Button>
+                                        <Button size="sm" variant="outline">
+                                            View Details
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))
+                )}
             </div>
         </div>
     );

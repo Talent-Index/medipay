@@ -114,40 +114,46 @@ export default function InsuranceClaims() {
 
                     {/* Claims List */}
                     <div className="space-y-4">
-                        {filteredClaims.map((claim) => (
-                            <div key={claim.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h4 className="font-semibold">{claim.service}</h4>
-                                        <StatusBadge status={mapStatus(claim.status)} />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        Patient: {claim.patientName} • Institution: {claim.institutionName}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        Claim ID: {claim.claimId} • Submitted: {new Date(claim.processedDate).toLocaleDateString()}
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <p className="font-bold text-lg">${claim.amount}</p>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="outline">
-                                            <Eye className="w-4 h-4" />
-                                        </Button>
-                                        {claim.status === 'pending' && (
-                                            <>
-                                                <Button size="sm" className="bg-paid hover:bg-paid/90">
-                                                    <CheckCircle className="w-4 h-4" />
-                                                </Button>
-                                                <Button size="sm" variant="destructive">
-                                                    <XCircle className="w-4 h-4" />
-                                                </Button>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                        {filteredClaims.length === 0 ? (
+                            <div className="text-center p-12 text-muted-foreground">
+                                No claims found.
                             </div>
-                        ))}
+                        ) : (
+                            filteredClaims.map((claim) => (
+                                <div key={claim.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h4 className="font-semibold">{claim.service}</h4>
+                                            <StatusBadge status={mapStatus(claim.status)} />
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">
+                                            Patient: {claim.patientName} • Institution: {claim.institutionName}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Claim ID: {claim.claimId} • Submitted: {new Date(claim.processedDate).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <p className="font-bold text-lg">${claim.amount}</p>
+                                        <div className="flex gap-2">
+                                            <Button size="sm" variant="outline">
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                            {claim.status === 'pending' && (
+                                                <>
+                                                    <Button size="sm" className="bg-paid hover:bg-paid/90">
+                                                        <CheckCircle className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button size="sm" variant="destructive">
+                                                        <XCircle className="w-4 h-4" />
+                                                    </Button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </CardContent>
             </Card>

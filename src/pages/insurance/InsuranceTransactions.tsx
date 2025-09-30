@@ -102,33 +102,39 @@ export default function InsuranceTransactions() {
 
                     {/* Transactions List */}
                     <div className="space-y-4">
-                        {filteredTransactions.map((transaction) => (
-                            <div key={transaction.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h4 className="font-semibold">{transaction.service}</h4>
-                                        <StatusBadge status={mapStatus(transaction.status)} />
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        Patient: {transaction.patientName} • Doctor: {transaction.doctorName}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
-                                        Transaction ID: {transaction.id} • {new Date(transaction.timestamp).toLocaleDateString()}
-                                    </p>
-                                    {transaction.blockchainHash && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Blockchain: {transaction.blockchainHash.slice(0, 10)}...
-                                        </p>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <p className="font-bold text-lg">${transaction.amount}</p>
-                                    <Button size="sm" variant="outline">
-                                        <Eye className="w-4 h-4" />
-                                    </Button>
-                                </div>
+                        {filteredTransactions.length === 0 ? (
+                            <div className="text-center p-12 text-muted-foreground">
+                                No transactions found.
                             </div>
-                        ))}
+                        ) : (
+                            filteredTransactions.map((transaction) => (
+                                <div key={transaction.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h4 className="font-semibold">{transaction.service}</h4>
+                                            <StatusBadge status={mapStatus(transaction.status)} />
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">
+                                            Patient: {transaction.patientName} • Doctor: {transaction.doctorName}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            Transaction ID: {transaction.id} • {new Date(transaction.timestamp).toLocaleDateString()}
+                                        </p>
+                                        {transaction.blockchainHash && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Blockchain: {transaction.blockchainHash.slice(0, 10)}...
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <p className="font-bold text-lg">${transaction.amount}</p>
+                                        <Button size="sm" variant="outline">
+                                            <Eye className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </CardContent>
             </Card>
