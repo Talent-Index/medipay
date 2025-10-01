@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 interface InvoiceData {
   id: string;
   patientId: string;
@@ -18,13 +19,15 @@ interface InvoiceData {
 }
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  FileText, 
-  Search, 
-  Download, 
-  CreditCard, 
+import { useInvoices } from "@/hooks/useApi";
+import {
+  FileText,
+  Search,
+  Download,
+  CreditCard,
   Calendar,
-  Filter
+  Filter,
+  XCircle
 } from "lucide-react";
 type Invoice = InvoiceData;
 import { PayInvoiceTransaction } from "@/components/sui/BlockchainTransaction";
@@ -34,12 +37,11 @@ export default function PatientInvoices() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Placeholder dataset (empty until backend integration)
-  const allInvoices: Invoice[] = [];
-  const userInvoices = allInvoices.filter(invoice => invoice.patientId === user?.id);
-  
+  // Fetch invoices using the hook
+  const { data: invoices, isLoading, error } = useInvoices();
+
   // Filter by search term
-  const filteredInvoices = userInvoices.filter(invoice =>
+  const filteredInvoices = (invoices || []).filter(invoice =>
     invoice.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -71,7 +73,7 @@ export default function PatientInvoices() {
             View and manage all your medical invoices
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon">
             <Filter className="w-4 h-4" />
@@ -98,6 +100,37 @@ export default function PatientInvoices() {
         </CardContent>
       </Card>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="medical-card">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32 mb-1" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Card className="medical-card border-destructive">
+          <CardContent className="p-6 text-center">
+            <XCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Error Loading Invoices</h3>
+            <p className="text-muted-foreground">{error.message || 'An error occurred'}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Invoices List */}
       <div className="space-y-4">
         {filteredInvoices.length > 0 ? (
@@ -110,7 +143,7 @@ export default function PatientInvoices() {
                       <h3 className="text-xl font-semibold">{invoice.service}</h3>
                       <StatusBadge status={invoice.status} />
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4" />
@@ -152,7 +185,7 @@ export default function PatientInvoices() {
                         <Download className="w-4 h-4 mr-1" />
                         Download
                       </Button>
-                      
+
                       {invoice.status === 'pending' && (
                         <Button
                           size="sm"
@@ -187,7 +220,7 @@ export default function PatientInvoices() {
                 {searchTerm ? 'No matching invoices' : 'No invoices found'}
               </h3>
               <p className="text-muted-foreground">
-                {searchTerm 
+                {searchTerm
                   ? 'Try adjusting your search terms'
                   : 'Your medical invoices will appear here when created by healthcare providers'
                 }
@@ -217,7 +250,7 @@ export default function PatientInvoices() {
                 </p>
                 <p className="text-sm text-muted-foreground">Pending Payments</p>
               </div>
-              
+
               <div className="text-center">
                 <p className="text-2xl font-bold text-paid">
                   ${filteredInvoices
@@ -227,7 +260,7 @@ export default function PatientInvoices() {
                 </p>
                 <p className="text-sm text-muted-foreground">Paid Amount</p>
               </div>
-              
+
               <div className="text-center">
                 <p className="text-2xl font-bold text-primary">
                   ${filteredInvoices

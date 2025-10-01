@@ -55,6 +55,7 @@ interface Product {
 }
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
+import { useInvoices, useProducts } from "@/hooks/useApi";
 import {
   Building2,
   FileText,
@@ -71,25 +72,28 @@ import {
   Settings
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useUserTransactions } from "@/hooks";
 
 export default function InstitutionDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Placeholder datasets (empty until backend integration)
-  const allInvoices: Invoice[] = [];
-  const allPayments: InsurancePayment[] = [];
-  const allTransactions: Transaction[] = [];
-  const allInstitutionUsers: InstitutionUser[] = [];
-  const allProducts: Product[] = [];
+  // Fetch data using hooks
+  const { data: allProducts, isLoading: productsLoading } = useProducts();
+  const { data: allInvoices, isLoading: invoicesLoading } = useInvoices();
+  const { transactions: allTransactions, isLoading: transactionsLoading } = useUserTransactions();
 
-  const institutionInvoices = allInvoices.filter(invoice => invoice.institutionId === user?.id);
-  const institutionPayments = allPayments.filter(payment => payment.institutionId === user?.id);
-  const institutionTransactions = allTransactions.filter(transaction =>
-    institutionInvoices.some(invoice => invoice.id === transaction.invoiceId)
+  // Placeholder datasets (empty until backend integration)
+  const allPayments: InsurancePayment[] = [];
+  const allInstitutionUsers: InstitutionUser[] = [];
+
+  const institutionInvoices = (allInvoices || []).filter(invoice => invoice.institutionId === user?.id);
+  const institutionPayments = (allPayments || []).filter(payment => payment.institutionId === user?.id);
+  const institutionTransactions = (allTransactions || []).filter(transaction =>
+    institutionInvoices.some(invoice => invoice.id === transaction.relatedId)
   );
-  const institutionUsers = allInstitutionUsers.filter(u => u.institutionId === user?.id);
-  const institutionProducts = allProducts.filter(p => p.institutionId === user?.id);
+  const institutionUsers = (allInstitutionUsers || []).filter(u => u.institutionId === user?.id);
+  const institutionProducts = (allProducts || []).filter(p => p.institutionId === user?.id);
 
   // Get current user's role and permissions
   const currentUser = institutionUsers.find(u => u.email === user?.email);
@@ -296,7 +300,7 @@ export default function InstitutionDashboard() {
                   <div key={transaction.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-1">
-                        <h4 className="font-semibold">{transaction.service}</h4>
+                        <h4 className="font-semibold">{transaction.invoiceDetails?.serviceDescription || transaction.description}</h4>
                         <StatusBadge status={transaction.status} />
                       </div>
                       <p className="text-sm text-muted-foreground">
