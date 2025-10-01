@@ -13,7 +13,7 @@ import { toast } from '@/hooks/use-toast';
  */
 export function useUserProfile() {
   const account = useCurrentAccount();
-  
+
   return useQuery({
     queryKey: ['profile', account?.address],
     queryFn: async () => {
@@ -53,7 +53,7 @@ export function useUpdateProfile() {
  */
 export function useInvoices() {
   const account = useCurrentAccount();
-  
+
   return useQuery({
     queryKey: ['invoices', account?.address],
     queryFn: async () => {
@@ -87,7 +87,7 @@ export function useMedicalRecords() {
  */
 export function usePrescriptions() {
   const account = useCurrentAccount();
-  
+
   return useQuery({
     queryKey: ['prescriptions', account?.address],
     queryFn: async () => {
@@ -113,11 +113,68 @@ export function useInsurancePackages() {
 }
 
 /**
+ * Hook to get insurance claims
+ */
+export function useInsuranceClaims() {
+  const account = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ['insurance-claims', account?.address],
+    queryFn: async () => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.insurance.claims(account.address);
+      return response.data;
+    },
+    enabled: !!account?.address,
+  });
+}
+
+/**
+ * Hook to get insurance patients
+ */
+export function useInsurancePatients() {
+  const account = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ['insurance-patients', account?.address],
+    queryFn: async () => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.insurance.patients(account.address);
+      return response.data;
+    },
+    enabled: !!account?.address,
+  });
+}
+
+/**
+ * Hook to create insurance patient
+ */
+export function useCreateInsurancePatient() {
+  const account = useCurrentAccount();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (patientData: { name: string; email: string; phone?: string; policyId: string }) => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.insurance.createPatient(account.address, patientData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['insurance-patients', account?.address] });
+      toast({ title: 'Patient added', description: 'New patient has been successfully added.' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Failed to add patient', description: err.message || 'Please try again.', variant: 'destructive' });
+    }
+  });
+}
+
+/**
  * Hook to get user's insurance
  */
 export function useMyInsurance() {
   const account = useCurrentAccount();
-  
+
   return useQuery({
     queryKey: ['my-insurance', account?.address],
     queryFn: async () => {
@@ -139,6 +196,74 @@ export function useProducts(filters?: { category?: string; institutionId?: strin
       const response = await api.products.list(filters);
       return response.data;
     },
+  });
+}
+
+/**
+ * Hook to get institution invoices
+ */
+export function useInstitutionInvoices() {
+  const account = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ['institution-invoices', account?.address],
+    queryFn: async () => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.invoices.listByInstitution(account.address);
+      return response.data;
+    },
+    enabled: !!account?.address,
+  });
+}
+
+/**
+ * Hook to get institution transactions
+ */
+export function useInstitutionTransactions() {
+  const account = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ['institution-transactions', account?.address],
+    queryFn: async () => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.transactions.listByInstitution(account.address);
+      return response.data;
+    },
+    enabled: !!account?.address,
+  });
+}
+
+/**
+ * Hook to get institution users
+ */
+export function useInstitutionUsers() {
+  const account = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ['institution-users', account?.address],
+    queryFn: async () => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.institution.users(account.address);
+      return response.data;
+    },
+    enabled: !!account?.address,
+  });
+}
+
+/**
+ * Hook to get institution insurance payments
+ */
+export function useInstitutionPayments() {
+  const account = useCurrentAccount();
+
+  return useQuery({
+    queryKey: ['institution-payments', account?.address],
+    queryFn: async () => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.institution.payments(account.address);
+      return response.data;
+    },
+    enabled: !!account?.address,
   });
 }
 
@@ -165,7 +290,7 @@ export function useApiMutation<TData = any, TVariables = any>(
   }
 ) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn,
     onSuccess: (data, variables) => {
@@ -175,13 +300,13 @@ export function useApiMutation<TData = any, TVariables = any>(
           queryClient.invalidateQueries({ queryKey: [queryKey] });
         });
       }
-      
+
       // Show success toast
       toast({
         title: 'Success',
         description: 'Operation completed successfully',
       });
-      
+
       // Call custom success handler
       options?.onSuccess?.(data, variables);
     },
@@ -192,7 +317,7 @@ export function useApiMutation<TData = any, TVariables = any>(
         description: error.message || 'An error occurred',
         variant: 'destructive',
       });
-      
+
       // Call custom error handler
       options?.onError?.(error as Error, variables);
     },
@@ -211,4 +336,3 @@ export default {
   useApiHealth,
   useApiMutation,
 };
-

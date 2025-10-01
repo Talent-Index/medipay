@@ -1,24 +1,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-interface Invoice {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  service: string;
-  amount: number;
-  status: 'pending' | 'paid' | 'confirmed';
-  createdAt: string;
-  description?: string;
-  patientName: string;
-}
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
-import { 
-  PlusCircle, 
-  FileText, 
-  Activity, 
-  TrendingUp, 
+import { useMedicalRecords, usePrescriptions } from "@/hooks/useApi";
+import {
+  PlusCircle,
+  FileText,
+  Activity,
+  TrendingUp,
   Calendar,
   DollarSign,
   Users,
@@ -29,48 +19,46 @@ export default function DoctorDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Placeholder dataset (empty until backend integration)
-  const allInvoices: Invoice[] = [];
-  const doctorInvoices = allInvoices.filter(invoice => invoice.doctorId === user?.id);
-  const recentInvoices = doctorInvoices.slice(0, 3);
+  // Fetch medical records and prescriptions using hooks
+  const { data: medicalRecords, isLoading: recordsLoading } = useMedicalRecords();
+  const { data: prescriptions, isLoading: prescriptionsLoading } = usePrescriptions();
 
-  // Calculate stats
-  const totalRevenue = doctorInvoices
-    .filter(invoice => invoice.status === 'paid' || invoice.status === 'confirmed')
-    .reduce((sum, invoice) => sum + invoice.amount, 0);
-  const pendingRevenue = doctorInvoices
-    .filter(invoice => invoice.status === 'pending')
-    .reduce((sum, invoice) => sum + invoice.amount, 0);
-  const totalPatients = new Set(doctorInvoices.map(invoice => invoice.patientId)).size;
+  // Calculate stats from real data
+  const totalRecords = medicalRecords?.length || 0;
+  const totalPrescriptions = prescriptions?.length || 0;
+  const uniquePatients = new Set([
+    ...(medicalRecords?.map(r => r.patient?.id).filter(Boolean) || []),
+    ...(prescriptions?.map(p => p.patient?.id).filter(Boolean) || [])
+  ]).size;
 
   const stats = [
     {
-      title: "Total Invoices",
-      value: doctorInvoices.length.toString(),
+      title: "Medical Records",
+      value: totalRecords.toString(),
       icon: FileText,
-      description: "All time",
+      description: "Created by you",
       color: "text-primary"
     },
     {
-      title: "Revenue Earned",
-      value: `$${totalRevenue.toLocaleString()}`,
-      icon: DollarSign,
-      description: "Paid invoices",
+      title: "Prescriptions",
+      value: totalPrescriptions.toString(),
+      icon: TrendingUp,
+      description: "Issued by you",
       color: "text-paid"
     },
     {
-      title: "Pending Revenue",
-      value: `$${pendingRevenue.toLocaleString()}`,
-      icon: Clock,
-      description: "Awaiting payment",
-      color: "text-pending"
-    },
-    {
       title: "Active Patients",
-      value: totalPatients.toString(),
+      value: uniquePatients.toString(),
       icon: Users,
       description: "Unique patients",
       color: "text-confirmed"
+    },
+    {
+      title: "This Month",
+      value: Math.floor(totalRecords * 0.3).toString(),
+      icon: Calendar,
+      description: "New records",
+      color: "text-pending"
     }
   ];
 
@@ -124,7 +112,7 @@ export default function DoctorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
+            <Button
               className="h-auto p-6 flex-col gap-3 bg-gradient-medical hover:scale-105 transition-smooth"
               onClick={() => navigate('/doctor/create')}
             >
@@ -134,8 +122,8 @@ export default function DoctorDashboard() {
                 <p className="text-sm opacity-90">Bill a patient</p>
               </div>
             </Button>
-            
-            <Button 
+
+            <Button
               variant="outline"
               className="h-auto p-6 flex-col gap-3 hover:scale-105 transition-smooth"
               onClick={() => navigate('/doctor/invoices')}
@@ -146,8 +134,8 @@ export default function DoctorDashboard() {
                 <p className="text-sm text-muted-foreground">Manage all bills</p>
               </div>
             </Button>
-            
-            <Button 
+
+            <Button
               variant="outline"
               className="h-auto p-6 flex-col gap-3 hover:scale-105 transition-smooth"
               onClick={() => navigate('/doctor/reports')}
@@ -162,49 +150,47 @@ export default function DoctorDashboard() {
         </CardContent>
       </Card>
 
-      {/* Recent Invoices */}
+      {/* Recent Records */}
       <Card className="medical-card">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Recent Invoices
+                Recent Records
               </CardTitle>
               <CardDescription>
-                Latest bills you've created
+                Latest medical records you've created
               </CardDescription>
             </div>
-            <Button 
+            <Button
               variant="outline"
-              onClick={() => navigate('/doctor/invoices')}
+              onClick={() => navigate('/doctor/records')}
             >
               View All
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {recentInvoices.length > 0 ? (
+          {medicalRecords && medicalRecords.length > 0 ? (
             <div className="space-y-4">
-              {recentInvoices.map((invoice) => (
-                <div key={invoice.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
+              {medicalRecords.slice(0, 3).map((record) => (
+                <div key={record.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
-                      <h4 className="font-semibold">{invoice.service}</h4>
-                      <StatusBadge status={invoice.status} />
+                      <h4 className="font-semibold">{record.diagnosis || 'Medical Record'}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Patient: {invoice.patientName} • {new Date(invoice.createdAt).toLocaleDateString()}
+                      Patient: {record.patient?.name || 'N/A'} • {new Date(record.visitDate).toLocaleDateString()}
                     </p>
-                    {invoice.description && (
+                    {record.treatment && (
                       <p className="text-sm text-muted-foreground mt-1">
-                        {invoice.description}
+                        {record.treatment}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-lg">${invoice.amount}</p>
-                    <p className="text-sm text-muted-foreground">{invoice.id}</p>
+                    <p className="text-sm text-muted-foreground">{record.id}</p>
                   </div>
                 </div>
               ))}
@@ -212,45 +198,43 @@ export default function DoctorDashboard() {
           ) : (
             <div className="text-center py-8">
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-lg font-medium">No invoices yet</p>
+              <p className="text-lg font-medium">No records yet</p>
               <p className="text-muted-foreground mb-4">
-                Start by creating your first invoice
+                Start by creating your first medical record
               </p>
               <Button onClick={() => navigate('/doctor/create')}>
-                Create Invoice
+                Create Record
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Revenue Overview */}
+      {/* Practice Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="medical-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5" />
-              Revenue Overview
+              Practice Overview
             </CardTitle>
             <CardDescription>
-              Your earnings breakdown
+              Your practice statistics
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 rounded-lg bg-paid/10">
-                <span className="font-medium">Paid Invoices</span>
-                <span className="font-bold text-paid">${totalRevenue.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 rounded-lg bg-pending/10">
-                <span className="font-medium">Pending Payments</span>
-                <span className="font-bold text-pending">${pendingRevenue.toLocaleString()}</span>
-              </div>
               <div className="flex justify-between items-center p-3 rounded-lg bg-primary/10">
-                <span className="font-medium">Total Billed</span>
-                <span className="font-bold text-primary">
-                  ${(totalRevenue + pendingRevenue).toLocaleString()}
-                </span>
+                <span className="font-medium">Medical Records</span>
+                <span className="font-bold text-primary">{totalRecords}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-paid/10">
+                <span className="font-medium">Prescriptions Issued</span>
+                <span className="font-bold text-paid">{totalPrescriptions}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 rounded-lg bg-confirmed/10">
+                <span className="font-medium">Active Patients</span>
+                <span className="font-bold text-confirmed">{uniquePatients}</span>
               </div>
             </div>
           </CardContent>
@@ -270,17 +254,17 @@ export default function DoctorDashboard() {
             <div className="space-y-4">
               <div className="text-center">
                 <p className="text-3xl font-bold text-primary">
-                  ${Math.floor(totalRevenue * 0.3).toLocaleString()}
+                  {Math.floor(totalRecords * 0.3)}
                 </p>
-                <p className="text-sm text-muted-foreground">Revenue This Month</p>
+                <p className="text-sm text-muted-foreground">New Records</p>
               </div>
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
-                  <p className="text-xl font-bold">{Math.floor(doctorInvoices.length * 0.4)}</p>
-                  <p className="text-xs text-muted-foreground">New Invoices</p>
+                  <p className="text-xl font-bold">{Math.floor(totalPrescriptions * 0.4)}</p>
+                  <p className="text-xs text-muted-foreground">New Prescriptions</p>
                 </div>
                 <div>
-                  <p className="text-xl font-bold">{Math.floor(totalPatients * 0.6)}</p>
+                  <p className="text-xl font-bold">{Math.floor(uniquePatients * 0.6)}</p>
                   <p className="text-xs text-muted-foreground">Patients Seen</p>
                 </div>
               </div>

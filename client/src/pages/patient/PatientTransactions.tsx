@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 interface Transaction {
   id: string;
   invoiceId: string;
@@ -10,16 +11,17 @@ interface Transaction {
   doctorName: string;
   service: string;
   amount: number;
-  status: 'pending' | 'paid' | 'confirmed';
+  status: 'pending' | 'confirmed' | 'failed' | 'approved' | 'partially_paid';
   timestamp: string;
   blockchainHash?: string;
   proofOfStake?: string;
 }
 import { useAuthStore } from "@/store/authStore";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  CreditCard, 
-  Search, 
+import { useUserTransactions } from "@/hooks/useUserTransactions";
+import {
+  CreditCard,
+  Search,
   Filter,
   Calendar,
   ExternalLink,
@@ -35,17 +37,28 @@ export default function PatientTransactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Placeholder dataset (empty until backend integration)
-  const allTransactions: Transaction[] = [];
-  const userTransactions = allTransactions.filter(transaction => 
-    transaction.patientName === user?.name
-  );
-  
+  // Fetch transactions using the hook
+  const { transactions: userTransactionsData, isLoading, error } = useUserTransactions();
+
+  // Map UserTransaction to Transaction interface
+  const userTransactions: Transaction[] = userTransactionsData.map(tx => ({
+    id: tx.id,
+    invoiceId: tx.relatedId || '',
+    patientName: tx.patientName || '',
+    doctorName: tx.doctorName || '',
+    service: tx.description,
+    amount: tx.amount || 0,
+    status: tx.status, // Use the actual status from the hook
+    timestamp: new Date(tx.timestamp).toISOString(),
+    blockchainHash: tx.blockchainHash,
+    proofOfStake: undefined // Not available in UserTransaction
+  }));
+
   // Filter by search term and status
   const filteredTransactions = userTransactions.filter(transaction => {
     const matchesSearch = transaction.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
+      transaction.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -111,17 +124,50 @@ export default function PatientTransactions() {
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
-                <option value="paid">Paid</option>
                 <option value="confirmed">Confirmed</option>
+                <option value="approved">Approved</option>
+                <option value="partially_paid">Partially Paid</option>
+                <option value="failed">Failed</option>
               </select>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="medical-card">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32 mb-1" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Card className="medical-card border-destructive">
+          <CardContent className="p-6 text-center">
+            <XCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">Error Loading Transactions</h3>
+            <p className="text-muted-foreground">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Transactions List */}
       <div className="space-y-4">
-        {filteredTransactions.length > 0 ? (
+        {!isLoading && !error && filteredTransactions.length > 0 ? (
           filteredTransactions.map((transaction) => (
             <Card key={transaction.id} className="medical-card transition-smooth hover:shadow-medical">
               <CardContent className="p-6">
@@ -132,7 +178,7 @@ export default function PatientTransactions() {
                       <StatusBadge status={transaction.status} />
                       {getStatusIcon(transaction.status)}
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <CreditCard className="w-4 h-4" />
@@ -203,7 +249,7 @@ export default function PatientTransactions() {
               <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No transactions found</h3>
               <p className="text-muted-foreground">
-                {searchTerm || statusFilter !== "all" 
+                {searchTerm || statusFilter !== "all"
                   ? "Try adjusting your search or filter criteria."
                   : "Your transaction history will appear here once you make payments."
                 }

@@ -2,38 +2,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/ui/status-badge";
-interface Invoice {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  service: string;
-  amount: number;
-  status: 'pending' | 'paid' | 'confirmed';
-  createdAt: string;
-  paidAt?: string;
-  description?: string;
-  doctorName: string;
-}
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
-import { 
-  CreditCard, 
-  FileText, 
-  Activity, 
-  TrendingUp, 
+import { useInvoices } from "@/hooks/useApi";
+import {
+  CreditCard,
+  FileText,
+  Activity,
+  TrendingUp,
   Calendar,
   DollarSign,
   Clock,
-  CheckCircle
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 
 export default function PatientDashboard() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
-  // Placeholder dataset (empty until backend integration)
-  const allInvoices: Invoice[] = [];
-  const userInvoices = allInvoices.filter(invoice => invoice.patientId === user?.id);
+  // Fetch invoices using the hook
+  const { data: invoices, isLoading, error } = useInvoices();
+
+  // Filter invoices for current user
+  const userInvoices = (invoices || []).filter(invoice => invoice.patientId === user?.id);
   const recentInvoices = userInvoices.slice(0, 3);
 
   // Calculate stats
@@ -126,7 +119,7 @@ export default function PatientDashboard() {
                 Your latest medical bills and payment status
               </CardDescription>
             </div>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => navigate('/patient/invoices')}
             >
@@ -135,7 +128,32 @@ export default function PatientDashboard() {
           </div>
         </CardHeader>
         <CardContent>
-          {recentInvoices.length > 0 ? (
+          {isLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="medical-card">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <Skeleton className="h-6 w-48 mb-2" />
+                        <Skeleton className="h-4 w-32 mb-1" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                      <Skeleton className="h-8 w-20" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : error ? (
+            <Card className="medical-card border-destructive">
+              <CardContent className="p-6 text-center">
+                <XCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">Error Loading Invoices</h3>
+                <p className="text-muted-foreground">{error.message || 'An error occurred'}</p>
+              </CardContent>
+            </Card>
+          ) : recentInvoices.length > 0 ? (
             <div className="space-y-4">
               {recentInvoices.map((invoice) => (
                 <div key={invoice.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
@@ -221,23 +239,23 @@ export default function PatientDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Button 
+              <Button
                 className="w-full justify-start gap-3"
                 onClick={() => navigate('/patient/transactions')}
               >
                 <Activity className="w-4 h-4" />
                 View Transaction History
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start gap-3"
                 onClick={() => navigate('/patient/profile')}
               >
                 <FileText className="w-4 h-4" />
                 Update Profile
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start gap-3"
                 onClick={() => navigate('/transactions')}
               >

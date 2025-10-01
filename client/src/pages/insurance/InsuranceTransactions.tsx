@@ -1,17 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-interface InsuranceTransaction {
-    id: string;
-    invoiceId: string;
-    patientName: string;
-    doctorName: string;
-    service: string;
-    amount: number;
-    status: 'pending' | 'paid' | 'confirmed';
-    timestamp: string;
-    blockchainHash?: string;
-}
 import { useAuthStore } from "@/store/authStore";
 import { useUserTransactions } from "@/hooks/useUserTransactions";
 import { CreditCard, Eye, TrendingUp, Loader2 } from "lucide-react";
@@ -21,8 +10,21 @@ export default function InsuranceTransactions() {
     const { user } = useAuthStore();
     const [filter, setFilter] = useState('all');
 
-    // Placeholder: replace with real fetched data
-    const transactions: InsuranceTransaction[] = [];
+    // Fetch transactions using the hook
+    const { transactions: userTransactions, isLoading } = useUserTransactions();
+
+    // Map the transactions to the expected format
+    const transactions = userTransactions.map(tx => ({
+        id: tx.id,
+        invoiceId: tx.relatedId || tx.id,
+        patientName: tx.patientName || 'Unknown Patient',
+        doctorName: tx.doctorName || 'Unknown Doctor',
+        service: tx.description,
+        amount: tx.amount || 0,
+        status: tx.status === 'approved' ? 'paid' : tx.status === 'confirmed' ? 'confirmed' : 'pending' as 'pending' | 'paid' | 'confirmed',
+        timestamp: new Date(tx.timestamp).toISOString(),
+        blockchainHash: tx.blockchainHash,
+    }));
 
     const filteredTransactions = transactions.filter(transaction => {
         if (filter === 'all') return true;

@@ -21,7 +21,6 @@ const ConnectWalletButton = () => {
                 </div>
             }
             className='w-full justify-center mt-6 bg-white text-black font-semibold hover:bg-white/90 transition-smooth'
-
         />
     );
 };
