@@ -15,7 +15,13 @@ import PatientMedicalRecords from "./pages/patient/PatientMedicalRecords";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import NotFound from "./pages/NotFound";
 import NewDoctorDashboard from "./pages/doctor/NewDoctorDashboard";
+import DoctorRecords from "./pages/doctor/DoctorRecords";
+import DoctorPrescriptions from "./pages/doctor/DoctorPrescriptions";
+import DoctorSettings from "./pages/doctor/DoctorSettings";
 import InstitutionDashboard from "./pages/institution/InstitutionDashboard";
+import InstitutionTransactions from "./pages/institution/InstitutionTransactions";
+import InstitutionPayments from "./pages/institution/InstitutionPayments";
+import InstitutionSettings from "./pages/institution/InstitutionSettings";
 import InsuranceDashboard from "./pages/insurance/InsuranceDashboard";
 import InsuranceClaims from "./pages/insurance/InsuranceClaims";
 import InsuranceTransactions from "./pages/insurance/InsuranceTransactions";
@@ -61,9 +67,9 @@ const Router = () => (
             <Route index element={<NewDoctorDashboard />} />
             <Route path="legacy" element={<DoctorDashboard />} />
             <Route path="create" element={<div>Create Invoice</div>} />
-            <Route path="records" element={<div>Medical Records</div>} />
-            <Route path="prescriptions" element={<div>Prescriptions</div>} />
-            <Route path="settings" element={<div>Doctor Settings</div>} />
+            <Route path="records" element={<DoctorRecords />} />
+            <Route path="prescriptions" element={<DoctorPrescriptions />} />
+            <Route path="settings" element={<DoctorSettings />} />
         </Route>
 
         {/* Institution Routes */}
@@ -73,11 +79,11 @@ const Router = () => (
             </ProtectedRoute>
         }>
             <Route index element={<InstitutionDashboard />} />
-            <Route path="transactions" element={<div>Institution Transactions</div>} />
-            <Route path="insurance-payments" element={<div>Insurance Payments</div>} />
+            <Route path="transactions" element={<InstitutionTransactions />} />
+            <Route path="insurance-payments" element={<InstitutionPayments />} />
             <Route path="products" element={<ProductManagement />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="settings" element={<div>Institution Settings</div>} />
+            <Route path="settings" element={<InstitutionSettings />} />
         </Route>
 
         {/* Insurance Routes */}
