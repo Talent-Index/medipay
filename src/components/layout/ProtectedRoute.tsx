@@ -7,7 +7,12 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, hydrated } = useAuthStore();
+
+  // Avoid redirecting until auth store has rehydrated from storage
+  if (!hydrated) {
+    return <div className="p-6 text-center text-muted-foreground">Loading...</div>;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

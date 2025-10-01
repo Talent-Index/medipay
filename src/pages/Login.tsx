@@ -3,27 +3,33 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, Activity, Wallet, Home } from "lucide-react";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuthStore();
   const { toast } = useToast();
+  const account = useCurrentAccount();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleWalletLogin = async () => {
+    if (!account?.address) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet before logging in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const success = await login(account.address);
 
       if (success) {
         // Get the user from the auth store to determine their role
@@ -41,26 +47,19 @@ export default function Login() {
       } else {
         toast({
           title: "Login failed",
-          description: "Invalid credentials. Please check your email and password.",
+          description: "User not found. Please register first.",
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleCryptoLogin = () => {
-    toast({
-      title: "Crypto Wallet Login",
-      description: "Crypto wallet integration coming soon!",
-    });
   };
 
   return (
@@ -90,67 +89,39 @@ export default function Login() {
         <Card className="medical-card">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
-              <><Users className="w-5 h-5" /> User Login</>
+              <Wallet className="w-5 h-5" />
+              Wallet Login
             </CardTitle>
             <CardDescription>
-              Enter your credentials to access your dashboard
+              Connect your wallet to access your dashboard
             </CardDescription>
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-primary hover:text-primary-hover font-medium transition-smooth"
+            <div className="space-y-6">
+              {!account?.address ? (
+                <div className="text-center space-y-4">
+                  <p className="text-muted-foreground">
+                    Connect your wallet to sign in to your account
+                  </p>
+                  <ConnectWalletButton />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-2">Connected Wallet:</p>
+                    <p className="font-mono text-sm break-all">{account.address}</p>
+                  </div>
+                  
+                  <Button
+                    onClick={handleWalletLogin}
+                    className="w-full hero-gradient text-white font-semibold transition-smooth hover:scale-105"
+                    disabled={isLoading}
                   >
-                    Forgot password?
-                  </Link>
+                    {isLoading ? "Signing in..." : "Sign In with Wallet"}
+                  </Button>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full hero-gradient text-white font-semibold transition-smooth hover:scale-105"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-
-            <div className="mt-6 flex flex-col items-center gap-4 w-full">
-              <div className="relative w-full">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-gradient-to-br from-background via-accent/30 to-primary/5 text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
-
-              <ConnectWalletButton />
+              )}
             </div>
 
             <div className="mt-6 text-center space-y-2">
