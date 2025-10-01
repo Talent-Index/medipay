@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import bcrypt from 'bcryptjs';
 import { rlsMiddleware, optionalRlsMiddleware } from '../middleware/rls.middleware';
 
 const router = Router();
@@ -72,87 +71,16 @@ router.post('/register', async (req: Request, res: Response) => {
  */
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { address, email, password } = req.body as { address?: string; email?: string; password?: string };
+    const { address } = req.body as { address?: string };
 
-    // Wallet-based login
-    if (address) {
-      const user = await prisma.user.findUnique({
-        where: { address },
-        select: {
-          id: true,
-          address: true,
-          name: true,
-          email: true,
-          role: true,
-          avatar: true,
-          createdAt: true,
-        },
-      });
-
-      if (!user) {
-        res.status(404).json({ error: 'User not found. Please register first.' });
-        return;
-      }
-
-      res.json({ success: true, data: user });
+    if (!address) {
+      res.status(400).json({ error: 'Wallet address is required' });
       return;
     }
 
-    // Email/password login
-    if (email && password) {
-      const user = await prisma.user.findUnique({
-        where: { email },
-        select: {
-          id: true,
-          address: true,
-          name: true,
-          email: true,
-          role: true,
-          avatar: true,
-          createdAt: true,
-          passwordHash: true,
-        },
-      });
-
-      if (!user || !user.passwordHash) {
-        res.status(401).json({ error: 'Invalid credentials' });
-        return;
-      }
-
-      const ok = await bcrypt.compare(password, user.passwordHash);
-      if (!ok) {
-        res.status(401).json({ error: 'Invalid credentials' });
-        return;
-      }
-
-      const { passwordHash, ...safeUser } = user as any;
-      res.json({ success: true, data: safeUser });
-      return;
-    }
-
-    res.status(400).json({ error: 'Provide either wallet address or email and password' });
-  } catch (error) {
-    console.error('Error logging in user:', error);
-    res.status(500).json({ error: 'Failed to login user' });
-  }
-});
-
-/**
- * Set or update password (protected via wallet header)
- */
-router.post('/set-password', rlsMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userAddress = (req as any).userAddress as string;
-    const { password } = req.body as { password?: string };
-    if (!password || password.length < 6) {
-      res.status(400).json({ error: 'Password must be at least 6 characters' });
-      return;
-    }
-
-    const hash = await bcrypt.hash(password, 10);
-    const updated = await prisma.user.update({
-      where: { address: userAddress },
-      data: { passwordHash: hash },
+    // Find user by wallet address
+    const user = await prisma.user.findUnique({
+      where: { address },
       select: {
         id: true,
         address: true,
@@ -163,10 +91,16 @@ router.post('/set-password', rlsMiddleware, async (req: Request, res: Response) 
         createdAt: true,
       },
     });
-    res.json({ success: true, data: updated });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found. Please register first.' });
+      return;
+    }
+
+    res.json({ success: true, data: user });
   } catch (error) {
-    console.error('Error setting password:', error);
-    res.status(500).json({ error: 'Failed to set password' });
+    console.error('Error logging in user:', error);
+    res.status(500).json({ error: 'Failed to login user' });
   }
 });
 
@@ -299,7 +233,7 @@ router.get('/my-insurance', rlsMiddleware, async (req: Request, res: Response) =
 router.get('/profile', rlsMiddleware, async (req: Request, res: Response) => {
   try {
     const userAddress = (req as any).userAddress;
-    
+
     const user = await prisma.user.findUnique({
       where: { address: userAddress },
       select: {
@@ -374,7 +308,7 @@ router.put('/profile', rlsMiddleware, async (req: Request, res: Response) => {
 router.get('/products', optionalRlsMiddleware, async (req: Request, res: Response) => {
   try {
     const { category, institutionId } = req.query;
-    
+
     const products = await prisma.product.findMany({
       where: {
         isActive: true,
@@ -399,6 +333,130 @@ router.get('/products', optionalRlsMiddleware, async (req: Request, res: Respons
   } catch (error) {
     console.error('Error fetching products:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
+
+/**
+ * Example: Get insurance claims (RLS protected)
+ * Insurance companies see claims for their patients
+ */
+router.get('/insurance-claims', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    // For insurance companies, return claims from invoices where patients have insurance from this company
+    const claims = await prisma.invoice.findMany({
+      where: {
+        status: {
+          in: ['pending', 'paid', 'confirmed']
+        }
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            address: true,
+          },
+        },
+        doctor: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+        institution: {
+          select: {
+            name: true,
+            address: true,
+          },
+        },
+        insuranceClaim: {
+          select: {
+            id: true,
+            claimId: true,
+            status: true,
+            processedDate: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Transform to match frontend expectations
+    const transformedClaims = claims.map((invoice: any) => ({
+      id: invoice.id,
+      patientId: invoice.patientId,
+      institutionId: invoice.institutionId,
+      service: invoice.service || 'Medical Service',
+      amount: invoice.amount,
+      status: invoice.status,
+      processedDate: invoice.insuranceClaim?.processedDate || invoice.createdAt.toISOString(),
+      claimId: invoice.insuranceClaim?.claimId || `CLAIM-${invoice.id}`,
+      patientName: invoice.patient.name,
+      institutionName: invoice.institution.name,
+    }));
+
+    res.json({
+      success: true,
+      count: transformedClaims.length,
+      data: transformedClaims,
+    });
+  } catch (error) {
+    console.error('Error fetching insurance claims:', error);
+    res.status(500).json({ error: 'Failed to fetch insurance claims' });
+  }
+});
+
+/**
+ * Example: Get insurance patients (RLS protected)
+ * Insurance companies see patients who have their insurance
+ */
+router.get('/insurance-patients', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    // Get patients who have insurance from this insurance company
+    const patients = await prisma.patientInsurance.findMany({
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            address: true,
+            createdAt: true,
+          },
+        },
+        insurancePackage: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // Transform to match frontend expectations
+    const transformedPatients = patients.map((pi: any) => ({
+      id: pi.patient.id,
+      name: pi.patient.name,
+      email: pi.patient.email,
+      phone: pi.patient.phone || '',
+      policyId: pi.insurancePackage.id,
+      policyName: pi.insurancePackage.name,
+      enrolledDate: pi.patient.createdAt.toISOString(),
+      status: new Date() <= pi.coverageEnd ? 'active' : 'inactive',
+    }));
+
+    res.json({
+      success: true,
+      count: transformedPatients.length,
+      data: transformedPatients,
+    });
+  } catch (error) {
+    console.error('Error fetching insurance patients:', error);
+    res.status(500).json({ error: 'Failed to fetch insurance patients' });
   }
 });
 

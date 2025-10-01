@@ -199,6 +199,12 @@ export const api = {
     packages: () => apiClient.get('/insurance-packages'),
     my: (userAddress: string) =>
       apiClient.get('/my-insurance', { userAddress }),
+    claims: (userAddress: string) =>
+      apiClient.get('/insurance-claims', { userAddress }),
+    patients: (userAddress: string) =>
+      apiClient.get('/insurance-patients', { userAddress }),
+    createPatient: (userAddress: string, body: { name: string; email: string; phone?: string; policyId: string }) =>
+      apiClient.post('/insurance-patients', body, { userAddress }),
   },
 
   // Products
