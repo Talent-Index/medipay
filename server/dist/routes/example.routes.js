@@ -3,6 +3,92 @@ import { prisma } from '../lib/prisma';
 import { rlsMiddleware, optionalRlsMiddleware } from '../middleware/rls.middleware';
 const router = Router();
 /**
+ * Register user (public)
+ * Creates or updates a user profile using wallet address as identity
+ */
+router.post('/register', async (req, res) => {
+    try {
+        const { address, email, name, role } = req.body;
+        if (!address || !email || !name) {
+            res.status(400).json({ error: 'Missing required fields: address, email, name' });
+            return;
+        }
+        // Normalize role to Prisma enum casing if provided; default to PATIENT
+        const normalizedRole = (role || 'PATIENT').toString().toUpperCase();
+        const allowedRoles = ['PATIENT', 'DOCTOR', 'INSTITUTION', 'INSURANCE'];
+        const roleValue = allowedRoles.includes(normalizedRole) ? normalizedRole : 'PATIENT';
+        // Upsert by unique wallet address; keep address as the identity key
+        const user = await prisma.user.upsert({
+            where: { address },
+            update: {
+                email,
+                name,
+                role: roleValue,
+            },
+            create: {
+                address,
+                email,
+                name,
+                role: roleValue,
+            },
+            select: {
+                id: true,
+                address: true,
+                name: true,
+                email: true,
+                role: true,
+                avatar: true,
+                createdAt: true,
+            },
+        });
+        res.json({ success: true, data: user });
+    }
+    catch (error) {
+        // Handle unique constraint on email gracefully
+        if (error?.code === 'P2002') {
+            res.status(409).json({ error: 'Email already in use' });
+            return;
+        }
+        console.error('Error registering user:', error);
+        res.status(500).json({ error: 'Failed to register user' });
+    }
+});
+/**
+ * Login user (public)
+ * Authenticates user by wallet address and returns user profile
+ */
+router.post('/login', async (req, res) => {
+    try {
+        const { address } = req.body;
+        if (!address) {
+            res.status(400).json({ error: 'Wallet address is required' });
+            return;
+        }
+        // Find user by wallet address
+        const user = await prisma.user.findUnique({
+            where: { address },
+            select: {
+                id: true,
+                address: true,
+                name: true,
+                email: true,
+                role: true,
+                avatar: true,
+                createdAt: true,
+            },
+        });
+        if (!user) {
+            res.status(404).json({ error: 'User not found. Please register first.' });
+            return;
+        }
+        res.json({ success: true, data: user });
+    }
+    catch (error) {
+        console.error('Error logging in user:', error);
+        res.status(500).json({ error: 'Failed to login user' });
+    }
+});
+/**
  * Example: Get user's invoices (RLS protected)
  * Only returns invoices the authenticated user can access
  */
@@ -151,6 +237,43 @@ router.get('/profile', rlsMiddleware, async (req, res) => {
     catch (error) {
         console.error('Error fetching profile:', error);
         res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+/**
+ * Update user's profile (RLS protected)
+ */
+router.put('/profile', rlsMiddleware, async (req, res) => {
+    try {
+        const userAddress = req.userAddress;
+        const { name, email, phone, avatar } = req.body;
+        const updated = await prisma.user.update({
+            where: { address: userAddress },
+            data: {
+                ...(name !== undefined ? { name } : {}),
+                ...(email !== undefined ? { email } : {}),
+                ...(phone !== undefined ? { phone } : {}),
+                ...(avatar !== undefined ? { avatar } : {}),
+            },
+            select: {
+                id: true,
+                address: true,
+                name: true,
+                email: true,
+                phone: true,
+                avatar: true,
+                role: true,
+                createdAt: true,
+            },
+        });
+        res.json({ success: true, data: updated });
+    }
+    catch (error) {
+        if (error?.code === 'P2002') {
+            res.status(409).json({ error: 'Email already in use' });
+            return;
+        }
+        console.error('Error updating profile:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
     }
 });
 /**
