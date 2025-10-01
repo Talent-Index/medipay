@@ -13,6 +13,7 @@ export interface UserTransaction {
     description: string;
     blockchainHash?: string;
     relatedId?: string;
+    paymentMethod?: 'cash' | 'insurance';
     patientName?: string;
     doctorName?: string;
     invoiceDetails?: {
@@ -230,6 +231,7 @@ export function useUserTransactions(): UseUserTransactionsReturn {
                         description: `Payment of $${Number(content.fields?.amount || 0)} via ${paymentTypeMap[content.fields?.payment_type as keyof typeof paymentTypeMap] || 'cash'}`,
                         blockchainHash: content.fields?.transaction_hash || objectId,
                         relatedId: invoiceId,
+                        paymentMethod: paymentTypeMap[content.fields?.payment_type as keyof typeof paymentTypeMap] || 'cash',
                         patientName,
                         doctorName,
                         invoiceDetails,
