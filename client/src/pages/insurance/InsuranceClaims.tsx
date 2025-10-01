@@ -1,20 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
-interface InsurancePayment {
-    id: string;
-    patientId: string;
-    institutionId: string;
-    service: string;
-    amount: number;
-    status: 'pending' | 'paid' | 'confirmed';
-    processedDate: string;
-    claimId: string;
-    patientName: string;
-    institutionName: string;
-}
 import { useAuthStore } from "@/store/authStore";
 import { useInvoice } from "@/hooks/useInvoice";
+import { useInsuranceClaims } from "@/hooks/useApi";
 import { FileText, Search, Filter, Eye, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,9 +13,7 @@ export default function InsuranceClaims() {
     const [filter, setFilter] = useState('all');
     const [approvingClaim, setApprovingClaim] = useState<string | null>(null);
 
-    // Placeholder dataset (empty until backend integration)
-    const allInsurancePayments: InsurancePayment[] = [];
-    const claims = allInsurancePayments.filter(payment => payment.id.includes('IP'));
+    const { data: claims, isLoading: claimsLoading } = useInsuranceClaims();
 
     const filteredClaims = claims.filter(claim => {
         if (filter === 'all') return true;

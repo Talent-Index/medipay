@@ -5,38 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/authStore";
-interface Policy {
-    id: string;
-    name: string;
-}
-
-interface InsurancePayment {
-    id: string;
-    patientId: string;
-    institutionId: string;
-    status: 'pending' | 'paid' | 'confirmed';
-    amount: number;
-    service: string;
-    patientName: string;
-    institutionName: string;
-    processedDate: string;
-    claimId: string;
-}
+import { useInsurancePatients, useInsurancePackages, useCreateInsurancePatient } from "@/hooks/useApi";
 import { StatusBadge } from "@/components/ui/status-badge";
-
-interface InsurancePatient {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    policyId: string;
-}
 
 export default function InsurancePatients() {
     const { user } = useAuthStore();
 
-    // State for patients list and search
-    const [patients, setPatients] = useState<InsurancePatient[]>([]);
+    // State for search
     const [searchTerm, setSearchTerm] = useState("");
 
     // Form state for new patient
@@ -47,10 +22,14 @@ export default function InsurancePatients() {
         policyId: ""
     });
 
-    // Load initial patients - replace with actual data fetching
-    useEffect(() => {
-        setPatients([]);
-    }, []);
+    // Fetch patients from API
+    const { data: patients = [], isLoading: patientsLoading } = useInsurancePatients();
+
+    // Fetch insurance packages
+    const { data: policies = [] } = useInsurancePackages();
+
+    // Create patient mutation
+    const createPatientMutation = useCreateInsurancePatient();
 
     // Filter patients by search term
     const filteredPatients = patients.filter(p =>
@@ -64,38 +43,35 @@ export default function InsurancePatients() {
         setNewPatient(prev => ({ ...prev, [field]: value }));
     };
 
-    // Handle adding new patient
-    const handleAddPatient = () => {
-        if (newPatient.name && newPatient.email && newPatient.policyId) {
-            const newId = `PAT-${Date.now()}`;
-            const patient: InsurancePatient = {
-                id: newId,
-                name: newPatient.name,
-                email: newPatient.email,
-                phone: newPatient.phone,
-                policyId: newPatient.policyId
-            };
-            setPatients(prev => [...prev, patient]);
-            setNewPatient({ name: "", email: "", phone: "", policyId: "" });
+    // Handle add patient
+    const handleAddPatient = async () => {
+        if (!newPatient.name || !newPatient.email || !newPatient.policyId) return;
+
+        try {
+            await createPatientMutation.mutateAsync(newPatient);
+            // Reset form
+            setNewPatient({
+                name: "",
+                email: "",
+                phone: "",
+                policyId: ""
+            });
+        } catch (error) {
+            // Error is handled by the mutation
         }
     };
 
-    // Placeholder datasets (empty until backend integration)
-    const policies: Policy[] = [];
-    const insurancePayments: InsurancePayment[] = [];
-
-    // Get policy name by id
+    // Helper function to get policy name
     const getPolicyName = (policyId: string) => {
         const policy = policies.find(p => p.id === policyId);
-        return policy ? policy.name : "Unknown Policy";
+        return policy?.name || 'Unknown Policy';
     };
 
-    // Get payment status summary for patient
+    // Helper function to get payment status (mock implementation)
     const getPaymentStatus = (patientId: string) => {
-        const payments = insurancePayments.filter(p => p.patientId === patientId);
-        if (payments.length === 0) return "No Payments";
-        const paidCount = payments.filter(p => p.status === "paid").length;
-        return `${paidCount} / ${payments.length} Paid`;
+        // This would typically come from the API
+        // For now, return a mock status
+        return "No Payments";
     };
 
     return (
@@ -169,8 +145,12 @@ export default function InsurancePatients() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <Button onClick={handleAddPatient} className="bg-gradient-medical" disabled={!newPatient.name || !newPatient.email || !newPatient.policyId}>
-                        Add Patient
+                    <Button
+                        onClick={handleAddPatient}
+                        className="bg-gradient-medical"
+                        disabled={!newPatient.name || !newPatient.email || !newPatient.policyId || createPatientMutation.isPending}
+                    >
+                        {createPatientMutation.isPending ? 'Adding...' : 'Add Patient'}
                     </Button>
                 </CardContent>
             </Card>
