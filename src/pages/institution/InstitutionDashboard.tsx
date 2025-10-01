@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { mockInvoices, mockInsurancePayments, mockTransactions, mockInstitutionUsers, mockProducts } from "@/data/mockData";
 import { useAuthStore } from "@/store/authStore";
 import { useNavigate } from "react-router-dom";
