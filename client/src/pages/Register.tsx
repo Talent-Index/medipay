@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuthStore, UserRole } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Users, Activity, UserPlus, Home, Building2 } from "lucide-react";
+import { Shield, Users, Activity, UserPlus, Home, Building2, Wallet } from "lucide-react";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -24,31 +31,13 @@ export default function Register() {
   const { toast } = useToast();
   const account = useCurrentAccount();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
-    if (password !== confirmPassword) {
-      toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!account?.address) {
-      toast({
-        title: "Wallet not connected",
-        description: "Please connect your wallet before creating an account.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const performRegistration = useCallback(async () => {
     setIsLoading(true);
 
     try {
-      const success = await register(email, password, name, role, account.address);
+      const success = await register(email, password, name, role, account!.address);
 
       if (success) {
         toast({
@@ -74,6 +63,33 @@ export default function Register() {
     } finally {
       setIsLoading(false);
     }
+  }, [email, password, name, role, account, register, toast, navigate]);
+
+  useEffect(() => {
+    if (account?.address && showWalletModal) {
+      setShowWalletModal(false);
+      performRegistration();
+    }
+  }, [account, showWalletModal, performRegistration]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "Password mismatch",
+        description: "Passwords do not match. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!account?.address) {
+      setShowWalletModal(true);
+      return;
+    }
+
+    await performRegistration();
   };
 
   return (
@@ -232,6 +248,23 @@ export default function Register() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Wallet Not Connected</DialogTitle>
+            <DialogDescription>
+              Please connect your wallet to proceed with registration.
+            </DialogDescription>
+          </DialogHeader>
+          <ConnectWalletButton />
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setShowWalletModal(false)}>
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

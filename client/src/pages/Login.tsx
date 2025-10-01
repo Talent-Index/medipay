@@ -114,71 +114,20 @@ export default function Login() {
           </p>
         </div>
 
-        <Card className="medical-card mb-6">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2">
-              <Wallet className="w-5 h-5" />
-              Wallet Login
-            </CardTitle>
-            <CardDescription>
-              Connect your wallet to access your dashboard
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            <div className="space-y-6">
-              {!account?.address ? (
-                <div className="text-center space-y-4">
-                  <p className="text-muted-foreground">
-                    Connect your wallet to sign in to your account
-                  </p>
-                  <ConnectWalletButton />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-2">Connected Wallet:</p>
-                    <p className="font-mono text-sm break-all">{account.address}</p>
-                  </div>
-                  
-                  <Button
-                    onClick={handleWalletLogin}
-                    className="w-full hero-gradient text-white font-semibold transition-smooth hover:scale-105"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Signing in..." : "Sign In with Wallet"}
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-6 text-center space-y-2">
-              <div className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  className="text-primary hover:text-primary-hover font-medium transition-smooth"
-                >
-                  Sign up
-                </Link>
-              </div>
-            </div>
-
-            {/* Demo credentials removed */}
-          </CardContent>
-        </Card>
-
         <Card className="medical-card">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
-              Email Login
+              <Wallet className="w-5 h-5" />
+              Sign In
             </CardTitle>
             <CardDescription>
-              Sign in using your email and password
+              Sign in using your wallet or email and password
             </CardDescription>
           </CardHeader>
+
           <CardContent>
-            <div className="space-y-4">
+
+            <div className="mt-6 space-y-6">
               <div>
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
@@ -192,7 +141,45 @@ export default function Login() {
               </Button>
             </div>
 
-            <div className="mt-6 text-center space-y-2">
+            <div className="mt-6 flex flex-col items-center">
+              <div className="relative w-full">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-gradient-to-br from-background via-accent/30 to-primary/5 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+
+              <div className="space-y-6">
+                {!account?.address ? (
+                  <div className="text-center space-y-4">
+                    <p className="text-muted-foreground">
+                      Connect your wallet to sign in to your account
+                    </p>
+                    <ConnectWalletButton />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Connected Wallet:</p>
+                      <p className="font-mono text-sm break-all">{account.address}</p>
+                    </div>
+
+                    <Button
+                      onClick={handleWalletLogin}
+                      className="w-full hero-gradient text-white font-semibold transition-smooth hover:scale-105"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing in..." : "Sign In with Wallet"}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
               <div className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link to="/register" className="text-primary hover:text-primary-hover font-medium transition-smooth">Sign up</Link>
