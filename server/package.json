@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts",
     "verify:rls": "tsx verify-rls.ts",
     "test": "tsx tests/api.test.ts",
     "test:api": "tsx tests/api.test.ts",
