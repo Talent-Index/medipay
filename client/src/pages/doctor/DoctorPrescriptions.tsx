@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/authStore";
-import { api } from "@/lib/api";
+import { usePrescriptions } from "@/hooks/useApi";
 import { Pill, Search } from "lucide-react";
 
 interface PrescriptionItem {
@@ -22,27 +22,9 @@ interface PrescriptionItem {
 export default function DoctorPrescriptions() {
     const { user } = useAuthStore();
     const [query, setQuery] = useState("");
-    const [items, setItems] = useState<PrescriptionItem[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const load = async () => {
-            if (!user?.address) return;
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await api.prescriptions.list(user.address);
-                const data = (res?.data as any[]) || [];
-                setItems(data as PrescriptionItem[]);
-            } catch (e: any) {
-                setError(e?.message || "Failed to load prescriptions");
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [user?.address]);
+    // Fetch prescriptions using the hook
+    const { data: items, isLoading, error } = usePrescriptions();
 
     const filtered = useMemo(() => {
         if (!query.trim()) return items;
@@ -86,16 +68,16 @@ export default function DoctorPrescriptions() {
                     <CardDescription>{filtered.length} result{filtered.length !== 1 ? 's' : ''}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {loading && (
+                    {isLoading && (
                         <div className="p-6 text-center text-muted-foreground">Loading prescriptions...</div>
                     )}
-                    {!loading && error && (
-                        <div className="p-6 text-center text-destructive">{error}</div>
+                    {!isLoading && error && (
+                        <div className="p-6 text-center text-destructive">{error.message || 'An error occurred'}</div>
                     )}
-                    {!loading && !error && filtered.length === 0 && (
+                    {!isLoading && !error && filtered.length === 0 && (
                         <div className="p-6 text-center text-muted-foreground">No prescriptions found.</div>
                     )}
-                    {!loading && !error && filtered.length > 0 && (
+                    {!isLoading && !error && filtered.length > 0 && (
                         <div className="space-y-4">
                             {filtered.map((p) => (
                                 <div key={p.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
