@@ -176,6 +176,8 @@ export const api = {
       apiClient.get('/invoices', { userAddress }),
     get: (id: string, userAddress: string) =>
       apiClient.get(`/invoices/${id}`, { userAddress }),
+    listByInstitution: (userAddress: string) =>
+      apiClient.get('/institution/invoices', { userAddress }),
   },
 
   // Medical records
@@ -214,7 +216,20 @@ export const api = {
       return apiClient.get(`/products${query ? `?${query}` : ''}`);
     },
   },
+
+  // Transactions
+  transactions: {
+    listByInstitution: (userAddress: string) =>
+      apiClient.get('/institution/transactions', { userAddress }),
+  },
+
+  // Institution
+  institution: {
+    users: (userAddress: string) =>
+      apiClient.get('/institution/users', { userAddress }),
+    payments: (userAddress: string) =>
+      apiClient.get('/institution/payments', { userAddress }),
+  },
 };
 
 export default api;
-

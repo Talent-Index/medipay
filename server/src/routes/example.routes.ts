@@ -460,4 +460,154 @@ router.get('/insurance-patients', rlsMiddleware, async (req: Request, res: Respo
   }
 });
 
+/**
+ * Example: Get institution invoices (RLS protected)
+ * Institutions see invoices for their services
+ */
+router.get('/institution/invoices', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    const invoices = await prisma.invoice.findMany({
+      include: {
+        patient: { select: { name: true, email: true } },
+        doctor: { select: { name: true, email: true } },
+        institution: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({
+      success: true,
+      count: invoices.length,
+      data: invoices,
+    });
+  } catch (error) {
+    console.error('Error fetching institution invoices:', error);
+    res.status(500).json({ error: 'Failed to fetch institution invoices' });
+  }
+});
+
+/**
+ * Example: Get institution transactions (RLS protected)
+ * Institutions see their transaction history
+ */
+router.get('/institution/transactions', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    // For now, return invoices as transactions - in a real app this might be a separate transactions table
+    const transactions = await prisma.invoice.findMany({
+      include: {
+        patient: { select: { name: true, email: true } },
+        doctor: { select: { name: true, email: true } },
+        institution: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Transform invoices to transaction format
+    const transformedTransactions = transactions.map((invoice: any) => ({
+      id: invoice.id,
+      type: 'invoice',
+      amount: invoice.amount,
+      status: invoice.status,
+      date: invoice.createdAt.toISOString(),
+      patientName: invoice.patient.name,
+      doctorName: invoice.doctor.name,
+      service: invoice.service || 'Medical Service',
+    }));
+
+    res.json({
+      success: true,
+      count: transformedTransactions.length,
+      data: transformedTransactions,
+    });
+  } catch (error) {
+    console.error('Error fetching institution transactions:', error);
+    res.status(500).json({ error: 'Failed to fetch institution transactions' });
+  }
+});
+
+/**
+ * Example: Get institution users (RLS protected)
+ * Institutions see users associated with them (patients, doctors, etc.)
+ */
+router.get('/institution/users', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    // Get users who have interacted with this institution through invoices
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            patientInvoices: {
+              some: {}
+            }
+          },
+          {
+            doctorInvoices: {
+              some: {}
+            }
+          }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        address: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({
+      success: true,
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    console.error('Error fetching institution users:', error);
+    res.status(500).json({ error: 'Failed to fetch institution users' });
+  }
+});
+
+/**
+ * Example: Get institution payments (RLS protected)
+ * Institutions see payments they've received
+ */
+router.get('/institution/payments', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    // Get paid invoices as payments received by the institution
+    const payments = await prisma.invoice.findMany({
+      where: {
+        status: 'paid'
+      },
+      include: {
+        patient: { select: { name: true, email: true } },
+        doctor: { select: { name: true, email: true } },
+        institution: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Transform to payment format
+    const transformedPayments = payments.map((invoice: any) => ({
+      id: invoice.id,
+      amount: invoice.amount,
+      date: invoice.createdAt.toISOString(),
+      patientName: invoice.patient.name,
+      doctorName: invoice.doctor.name,
+      service: invoice.service || 'Medical Service',
+      status: 'completed',
+    }));
+
+    res.json({
+      success: true,
+      count: transformedPayments.length,
+      data: transformedPayments,
+    });
+  } catch (error) {
+    console.error('Error fetching institution payments:', error);
+    res.status(500).json({ error: 'Failed to fetch institution payments' });
+  }
+});
+
 export default router;
