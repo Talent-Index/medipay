@@ -149,8 +149,10 @@ export const api = {
   auth: {
     register: (params: { address: string; email: string; name: string; role: 'PATIENT' | 'DOCTOR' | 'INSTITUTION' | 'INSURANCE' }) =>
       apiClient.post('/register', params),
-    login: (params: { address: string }) =>
+    login: (params: { address?: string; email?: string; password?: string }) =>
       apiClient.post('/login', params),
+    setPassword: (userAddress: string, body: { password: string }) =>
+      apiClient.post('/set-password', body, { userAddress }),
   },
 
   // Health check

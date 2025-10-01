@@ -106,12 +106,59 @@ export const useAuthStore = create<AuthState>()(
           },
           isAuthenticated: true,
         });
+
+        // Immediately set the password so email/password login will work
+        try {
+          await get().setPassword(password);
+        } catch (e) {
+          // Surface but don't prevent successful registration state
+          console.error('Post-register setPassword failed:', e);
+        }
         return true;
       }
 
       return false;
     } catch (error) {
       console.error('Register failed:', error);
+      throw error;
+    }
+  },
+
+  // New: email/password login path
+  loginWithEmail: async (email: string, password: string) => {
+    try {
+      const response = await api.auth.login({ email, password });
+      if (response?.success && response.data) {
+        const user = response.data as any;
+        useAuthStore.setState({
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: (user.role as string).toLowerCase() as UserRole,
+            avatar: user.avatar,
+            address: user.address,
+          },
+          isAuthenticated: true,
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Email login failed:', error);
+      throw error;
+    }
+  },
+
+  // New: set password via wallet-authenticated session
+  setPassword: async (password: string) => {
+    try {
+      const currentUser = useAuthStore.getState().user;
+      if (!currentUser?.address) throw new Error('Not authenticated');
+      const response = await api.auth.setPassword(currentUser.address, { password });
+      return !!response?.success;
+    } catch (error) {
+      console.error('Set password failed:', error);
       throw error;
     }
   },

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
+import bcrypt from 'bcryptjs';
 import { rlsMiddleware, optionalRlsMiddleware } from '../middleware/rls.middleware';
 
 const router = Router();
@@ -71,16 +72,87 @@ router.post('/register', async (req: Request, res: Response) => {
  */
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { address } = req.body as { address?: string };
+    const { address, email, password } = req.body as { address?: string; email?: string; password?: string };
 
-    if (!address) {
-      res.status(400).json({ error: 'Wallet address is required' });
+    // Wallet-based login
+    if (address) {
+      const user = await prisma.user.findUnique({
+        where: { address },
+        select: {
+          id: true,
+          address: true,
+          name: true,
+          email: true,
+          role: true,
+          avatar: true,
+          createdAt: true,
+        },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: 'User not found. Please register first.' });
+        return;
+      }
+
+      res.json({ success: true, data: user });
       return;
     }
 
-    // Find user by wallet address
-    const user = await prisma.user.findUnique({
-      where: { address },
+    // Email/password login
+    if (email && password) {
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          address: true,
+          name: true,
+          email: true,
+          role: true,
+          avatar: true,
+          createdAt: true,
+          passwordHash: true,
+        },
+      });
+
+      if (!user || !user.passwordHash) {
+        res.status(401).json({ error: 'Invalid credentials' });
+        return;
+      }
+
+      const ok = await bcrypt.compare(password, user.passwordHash);
+      if (!ok) {
+        res.status(401).json({ error: 'Invalid credentials' });
+        return;
+      }
+
+      const { passwordHash, ...safeUser } = user as any;
+      res.json({ success: true, data: safeUser });
+      return;
+    }
+
+    res.status(400).json({ error: 'Provide either wallet address or email and password' });
+  } catch (error) {
+    console.error('Error logging in user:', error);
+    res.status(500).json({ error: 'Failed to login user' });
+  }
+});
+
+/**
+ * Set or update password (protected via wallet header)
+ */
+router.post('/set-password', rlsMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userAddress = (req as any).userAddress as string;
+    const { password } = req.body as { password?: string };
+    if (!password || password.length < 6) {
+      res.status(400).json({ error: 'Password must be at least 6 characters' });
+      return;
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const updated = await prisma.user.update({
+      where: { address: userAddress },
+      data: { passwordHash: hash },
       select: {
         id: true,
         address: true,
@@ -91,16 +163,10 @@ router.post('/login', async (req: Request, res: Response) => {
         createdAt: true,
       },
     });
-
-    if (!user) {
-      res.status(404).json({ error: 'User not found. Please register first.' });
-      return;
-    }
-
-    res.json({ success: true, data: user });
+    res.json({ success: true, data: updated });
   } catch (error) {
-    console.error('Error logging in user:', error);
-    res.status(500).json({ error: 'Failed to login user' });
+    console.error('Error setting password:', error);
+    res.status(500).json({ error: 'Failed to set password' });
   }
 });
 

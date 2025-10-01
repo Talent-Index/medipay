@@ -7,14 +7,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, Activity, Wallet, Home } from "lucide-react";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 import { useCurrentAccount } from "@mysten/dapp-kit";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login } = useAuthStore();
+  const { login, loginWithEmail } = useAuthStore();
   const { toast } = useToast();
   const account = useCurrentAccount();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
 
   const handleWalletLogin = async () => {
     if (!account?.address) {
@@ -62,6 +67,29 @@ export default function Login() {
     }
   };
 
+  const handleEmailLogin = async () => {
+    if (!email || !password) {
+      toast({ title: "Missing credentials", description: "Enter email and password.", variant: "destructive" });
+      return;
+    }
+    setIsEmailLoading(true);
+    try {
+      const success = await loginWithEmail(email, password);
+      if (success) {
+        const { user } = useAuthStore.getState();
+        const redirectPath = user?.role === 'doctor' ? '/doctor' : user?.role === 'institution' ? '/institution' : user?.role === 'insurance' ? '/insurance' : '/patient';
+        toast({ title: "Welcome back!", description: "You have successfully logged in." });
+        navigate(redirectPath);
+      } else {
+        toast({ title: "Login failed", description: "Invalid credentials.", variant: "destructive" });
+      }
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Something went wrong.", variant: "destructive" });
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/5 flex items-center justify-center p-4">
       {/* Home Button */}
@@ -86,7 +114,7 @@ export default function Login() {
           </p>
         </div>
 
-        <Card className="medical-card">
+        <Card className="medical-card mb-6">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2">
               <Wallet className="w-5 h-5" />
@@ -137,6 +165,39 @@ export default function Login() {
             </div>
 
             {/* Demo credentials removed */}
+          </CardContent>
+        </Card>
+
+        <Card className="medical-card">
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              Email Login
+            </CardTitle>
+            <CardDescription>
+              Sign in using your email and password
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your password" />
+              </div>
+              <Button onClick={handleEmailLogin} className="w-full hero-gradient text-white font-semibold transition-smooth hover:scale-105" disabled={isEmailLoading}>
+                {isEmailLoading ? "Signing in..." : "Sign In with Email"}
+              </Button>
+            </div>
+
+            <div className="mt-6 text-center space-y-2">
+              <div className="text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link to="/register" className="text-primary hover:text-primary-hover font-medium transition-smooth">Sign up</Link>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
