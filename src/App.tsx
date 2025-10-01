@@ -9,6 +9,8 @@ import { Router } from "./Routes";
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl } from '@mysten/sui/client';
 import { SuiWalletProvider } from "./contexts/SuiWalletContext";
+import { useEffect } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 const queryClient = new QueryClient();
 const networks = {
@@ -17,22 +19,36 @@ const networks = {
 };
 
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <SuiClientProvider networks={networks} defaultNetwork="devnet">
-      <WalletProvider>
-        <SuiWalletProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Router />
-            </BrowserRouter>
-          </TooltipProvider>
-        </SuiWalletProvider>
-      </WalletProvider>
-    </SuiClientProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Ensure the auth store rehydrates on app mount, then mark hydrated
+  useEffect(() => {
+    const rehydrate = async () => {
+      try {
+        await (useAuthStore as any).persist?.rehydrate?.();
+      } finally {
+        useAuthStore.setState({ hydrated: true });
+      }
+    };
+    rehydrate();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SuiClientProvider networks={networks} defaultNetwork="devnet">
+        <WalletProvider>
+          <SuiWalletProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <Router />
+              </BrowserRouter>
+            </TooltipProvider>
+          </SuiWalletProvider>
+        </WalletProvider>
+      </SuiClientProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

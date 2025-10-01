@@ -9,6 +9,9 @@ import Register from "./pages/Register";
 import TransactionExplorer from "./pages/TransactionExplorer";
 import PatientDashboard from "./pages/patient/PatientDashboard";
 import PatientInvoices from "./pages/patient/PatientInvoices";
+import PatientProfile from "./pages/patient/PatientProfile";
+import PatientSettings from "./pages/patient/PatientSettings";
+import PatientMedicalRecords from "./pages/patient/PatientMedicalRecords";
 import DoctorDashboard from "./pages/doctor/DoctorDashboard";
 import NotFound from "./pages/NotFound";
 import NewDoctorDashboard from "./pages/doctor/NewDoctorDashboard";
@@ -44,8 +47,9 @@ const Router = () => (
             <Route index element={<PatientDashboard />} />
             <Route path="invoices" element={<PatientInvoices />} />
             <Route path="transactions" element={<div>Patient Transactions</div>} />
-            <Route path="records" element={<div>Medical Records</div>} />
-            <Route path="settings" element={<div>Patient Settings</div>} />
+            <Route path="records" element={<PatientMedicalRecords />} />
+            <Route path="settings" element={<PatientSettings />} />
+            <Route path="profile" element={<PatientProfile />} />
         </Route>
 
         {/* Doctor Routes */}

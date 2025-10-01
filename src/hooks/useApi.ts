@@ -26,6 +26,29 @@ export function useUserProfile() {
 }
 
 /**
+ * Hook to update user profile
+ */
+export function useUpdateProfile() {
+  const account = useCurrentAccount();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (updates: Partial<{ name: string; email: string; phone: string; avatar: string }>) => {
+      if (!account?.address) throw new Error('No wallet connected');
+      const response = await api.profile.update(account.address, updates);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', account?.address] });
+      toast({ title: 'Profile updated', description: 'Your changes have been saved.' });
+    },
+    onError: (err: any) => {
+      toast({ title: 'Update failed', description: err.message || 'Please try again.', variant: 'destructive' });
+    }
+  });
+}
+
+/**
  * Hook to get invoices
  */
 export function useInvoices() {
@@ -47,13 +70,13 @@ export function useInvoices() {
  */
 export function useMedicalRecords() {
   const account = useCurrentAccount();
-  
+
   return useQuery({
     queryKey: ['medical-records', account?.address],
     queryFn: async () => {
       if (!account?.address) throw new Error('No wallet connected');
       const response = await api.medicalRecords.list(account.address);
-      return response.data;
+      return response.data as Array<any>;
     },
     enabled: !!account?.address,
   });

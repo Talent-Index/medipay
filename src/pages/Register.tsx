@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, Activity, UserPlus, Home, Building2 } from "lucide-react";
 import { ConnectWalletButton } from "@/components/ConnectWalletButton";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -21,6 +22,7 @@ export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuthStore();
   const { toast } = useToast();
+  const account = useCurrentAccount();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,10 +36,19 @@ export default function Register() {
       return;
     }
 
+    if (!account?.address) {
+      toast({
+        title: "Wallet not connected",
+        description: "Please connect your wallet before creating an account.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const success = await register(email, password, name, role);
+      const success = await register(email, password, name, role, account.address);
 
       if (success) {
         toast({

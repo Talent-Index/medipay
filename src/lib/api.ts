@@ -145,6 +145,14 @@ export const apiClient = new ApiClient();
  * API endpoints and methods
  */
 export const api = {
+  // Auth
+  auth: {
+    register: (params: { address: string; email: string; name: string; role: 'PATIENT' | 'DOCTOR' | 'INSTITUTION' | 'INSURANCE' }) =>
+      apiClient.post('/register', params),
+    login: (params: { address: string }) =>
+      apiClient.post('/login', params),
+  },
+
   // Health check
   health: {
     check: () => apiClient.healthCheck(),
@@ -154,6 +162,10 @@ export const api = {
   profile: {
     get: (userAddress: string) =>
       apiClient.get('/profile', { userAddress }),
+    update: (
+      userAddress: string,
+      body: Partial<{ name: string; email: string; phone: string; avatar: string }>
+    ) => apiClient.put('/profile', body, { userAddress }),
   },
 
   // Invoices
