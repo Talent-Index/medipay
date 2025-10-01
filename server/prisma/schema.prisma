@@ -21,6 +21,7 @@ model User {
   role      UserRole @default(PATIENT)
   name      String
   email     String   @unique
+  passwordHash String?
   phone     String?
   avatar    String?
   createdAt DateTime @default(now())
