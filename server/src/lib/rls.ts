@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma';
+import { PrismaClient } from '../../prisma/generated/prisma';
 
 /**
  * Sets the current user address in the database session for RLS policies
@@ -8,7 +8,7 @@ export async function setRLSContext(prisma: PrismaClient, userAddress: string): 
   if (!userAddress) {
     throw new Error('User address is required for RLS context');
   }
-  
+
   // Set the session variable that RLS policies use
   await prisma.$executeRawUnsafe(
     `SELECT set_current_user_address($1)`,

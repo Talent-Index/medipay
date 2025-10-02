@@ -25,9 +25,10 @@ export default function DoctorRecords() {
     const { data: records, isLoading, error } = useMedicalRecords();
 
     const filtered = useMemo(() => {
-        if (!query.trim()) return records;
+        const safeRecords = records || [];
+        if (!query.trim()) return safeRecords;
         const q = query.toLowerCase();
-        return records.filter((r) =>
+        return safeRecords.filter((r) =>
             r.diagnosis?.toLowerCase().includes(q) ||
             r.treatment?.toLowerCase().includes(q) ||
             r.patient?.name?.toLowerCase().includes(q)
@@ -97,5 +98,3 @@ export default function DoctorRecords() {
         </div>
     );
 }
-
-

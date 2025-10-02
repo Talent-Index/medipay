@@ -1,17 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Shield, Activity, CreditCard, Users, Lock, Zap } from "lucide-react";
+import { Shield, Activity, CreditCard, Users, Lock, Zap, LogOut } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const { isAuthenticated, user, logout } = useAuthStore();
 
   const features = [
     {
       icon: Shield,
       title: "Blockchain Security",
       description: "Every transaction is secured and verified through blockchain technology"
-    }, 
+    },
     {
       icon: Activity,
       title: "Real-time Tracking",
@@ -39,6 +41,31 @@ export default function Landing() {
     }
   ];
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  const goToDashboard = () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    switch (user.role) {
+      case 'doctor':
+        navigate('/doctor');
+        break;
+      case 'institution':
+        navigate('/institution');
+        break;
+      case 'insurance':
+        navigate('/insurance');
+        break;
+      default:
+        navigate('/patient');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/30 to-primary/5">
       {/* Sticky Navbar */}
@@ -57,14 +84,14 @@ export default function Landing() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              <a 
-                href="#features" 
+              <a
+                href="#features"
                 className="text-muted-foreground hover:text-primary transition-smooth"
               >
                 Features
               </a>
-              <a 
-                href="#about" 
+              <a
+                href="#about"
                 className="text-muted-foreground hover:text-primary transition-smooth"
               >
                 About
@@ -79,20 +106,43 @@ export default function Landing() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/login')}
-              >
-                Login
-              </Button>
-              <Button
-                size="sm"
-                className="bg-gradient-medical hover:scale-105 transition-smooth"
-                onClick={() => navigate('/register')}
-              >
-                Get Started
-              </Button>
+              {!isAuthenticated ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-medical hover:scale-105 transition-smooth"
+                    onClick={() => navigate('/register')}
+                  >
+                    Get Started
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-medical hover:scale-105 transition-smooth"
+                    onClick={goToDashboard}
+                  >
+                    Go to Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 flex items-center"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -106,16 +156,16 @@ export default function Landing() {
               <Shield className="w-4 h-4 mr-2" />
               Blockchain-Powered Healthcare Payments
             </div>
-            
+
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-confirmed to-primary bg-clip-text text-transparent">
               MediPay
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 leading-relaxed">
-              Transparent, secure, and instant medical transaction management. 
+              Transparent, secure, and instant medical transaction management.
               Built on blockchain technology for the future of healthcare payments.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button
                 size="lg"
@@ -125,7 +175,7 @@ export default function Landing() {
                 <Users className="w-5 h-5 mr-2" />
                 Get started
               </Button>
-              
+
               <Button
                 size="lg"
                 variant="outline"
@@ -150,7 +200,7 @@ export default function Landing() {
             Revolutionary features that make medical payments transparent, secure, and efficient
           </p>
         </div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <Card key={index} className="medical-card transition-smooth hover:scale-105 hover:shadow-medical">
@@ -178,7 +228,7 @@ export default function Landing() {
               Ready to Transform Healthcare Payments?
             </CardTitle>
             <CardDescription className="text-lg max-w-2xl mx-auto">
-              Join thousands of healthcare providers and patients already using MediPay 
+              Join thousands of healthcare providers and patients already using MediPay
               for secure, transparent medical transactions.
             </CardDescription>
           </CardHeader>
@@ -191,7 +241,7 @@ export default function Landing() {
               >
                 Get Started Today
               </Button>
-              
+
               <Button
                 size="lg"
                 variant="outline"

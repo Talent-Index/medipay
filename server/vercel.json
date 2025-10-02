@@ -1,0 +1,10 @@
+{
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/src"
+        }
+    ],
+    "installCommand": "npm install && npm run postinstall",
+    "outputDirectory": "dist"
+}
