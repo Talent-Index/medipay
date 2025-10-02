@@ -41,7 +41,7 @@ export default function PatientTransactions() {
   const { transactions: userTransactionsData, isLoading, error } = useUserTransactions();
 
   // Map UserTransaction to Transaction interface
-  const userTransactions: Transaction[] = userTransactionsData.map(tx => ({
+  const userTransactions: Transaction[] = (userTransactionsData || []).map(tx => ({
     id: tx.id,
     invoiceId: tx.relatedId || '',
     patientName: tx.patientName || '',

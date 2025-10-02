@@ -15,14 +15,21 @@
     "test": "tsx tests/api.test.ts",
     "test:api": "tsx tests/api.test.ts",
     "test:rls": "tsx verify-rls.ts",
-    "test:watch": "tsx watch tests/api.test.ts"
+    "test:watch": "tsx watch tests/api.test.ts",
+    "postinstall": "prisma generate && prisma migrate deploy"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.16.3",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.3",
+    "@types/helmet": "^0.0.48",
+    "@types/node": "^24.6.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -31,10 +38,12 @@
     "zod": "^4.1.11"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
+    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
     "@types/helmet": "^0.0.48",
-    "@types/node": "^24.6.0",
+    "@types/node": "^24.6.1",
     "prisma": "^6.16.3",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.6",

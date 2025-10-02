@@ -1,15 +1,10 @@
 {
-    "version": 2,
-    "builds": [
+    "rewrites": [
         {
-            "src": "package.json",
-            "use": "@vercel/node"
+            "source": "/(.*)",
+            "destination": "/src"
         }
     ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "dist/index.js"
-        }
-    ]
+    "installCommand": "npm install && npm run postinstall",
+    "outputDirectory": "dist"
 }

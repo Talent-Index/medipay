@@ -15,7 +15,7 @@ export default function InsuranceClaims() {
 
     const { data: claims, isLoading: claimsLoading } = useInsuranceClaims();
 
-    const filteredClaims = claims.filter(claim => {
+    const filteredClaims = (claims || []).filter(claim => {
         if (filter === 'all') return true;
         return claim.status === filter;
     });
@@ -52,9 +52,9 @@ export default function InsuranceClaims() {
     };
 
     const stats = [
-        { label: 'Total Claims', value: claims.length, color: 'text-primary' },
-        { label: 'Approved', value: claims.filter(c => c.status === 'paid' || c.status === 'confirmed').length, color: 'text-paid' },
-        { label: 'Pending', value: claims.filter(c => c.status === 'pending').length, color: 'text-pending' }
+        { label: 'Total Claims', value: (claims || []).length, color: 'text-primary' },
+        { label: 'Approved', value: (claims || []).filter(c => c.status === 'paid' || c.status === 'confirmed').length, color: 'text-paid' },
+        { label: 'Pending', value: (claims || []).filter(c => c.status === 'pending').length, color: 'text-pending' }
     ];
 
     return (

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { rlsMiddleware, optionalRlsMiddleware } from '../middleware/rls.middleware';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -67,34 +68,69 @@ router.post('/register', async (req: Request, res: Response) => {
 
 /**
  * Login user (public)
- * Authenticates user by wallet address and returns user profile
+ * Authenticates user by wallet address or email and password, and returns user profile
  */
 router.post('/login', async (req: Request, res: Response) => {
   try {
-    const { address } = req.body as { address?: string };
+    const { address, email, password } = req.body as { address?: string; email?: string; password?: string };
 
-    if (!address) {
-      res.status(400).json({ error: 'Wallet address is required' });
+    if (!address && !(email && password)) {
+      res.status(400).json({ error: 'Wallet address or email and password are required' });
       return;
     }
 
-    // Find user by wallet address
-    const user = await prisma.user.findUnique({
-      where: { address },
-      select: {
-        id: true,
-        address: true,
-        name: true,
-        email: true,
-        role: true,
-        avatar: true,
-        createdAt: true,
-      },
-    });
+    let user;
 
-    if (!user) {
-      res.status(404).json({ error: 'User not found. Please register first.' });
-      return;
+    if (email && password) {
+      // Find user by email
+      user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          address: true,
+          name: true,
+          email: true,
+          role: true,
+          avatar: true,
+          createdAt: true,
+          passwordHash: true,
+        },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: 'User not found. Please register first.' });
+        return;
+      }
+
+      // Verify password
+      const passwordMatch = await bcrypt.compare(password, user.passwordHash || '');
+      if (!passwordMatch) {
+        res.status(401).json({ error: 'Invalid email or password' });
+        return;
+      }
+
+      // Remove passwordHash from user object before sending response
+      const { passwordHash, ...userWithoutPassword } = user;
+      user = userWithoutPassword;
+    } else if (address) {
+      // Find user by wallet address
+      user = await prisma.user.findUnique({
+        where: { address },
+        select: {
+          id: true,
+          address: true,
+          name: true,
+          email: true,
+          role: true,
+          avatar: true,
+          createdAt: true,
+        },
+      });
+
+      if (!user) {
+        res.status(404).json({ error: 'User not found. Please register first.' });
+        return;
+      }
     }
 
     res.json({ success: true, data: user });
@@ -346,7 +382,7 @@ router.get('/insurance-claims', rlsMiddleware, async (req: Request, res: Respons
     const claims = await prisma.invoice.findMany({
       where: {
         status: {
-          in: ['pending', 'paid', 'confirmed']
+          in: ['PENDING', 'PAID', 'APPROVED']
         }
       },
       include: {
@@ -370,14 +406,6 @@ router.get('/insurance-claims', rlsMiddleware, async (req: Request, res: Respons
             address: true,
           },
         },
-        insuranceClaim: {
-          select: {
-            id: true,
-            claimId: true,
-            status: true,
-            processedDate: true,
-          },
-        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -387,13 +415,13 @@ router.get('/insurance-claims', rlsMiddleware, async (req: Request, res: Respons
     // Transform to match frontend expectations
     const transformedClaims = claims.map((invoice: any) => ({
       id: invoice.id,
-      patientId: invoice.patientId,
-      institutionId: invoice.institutionId,
-      service: invoice.service || 'Medical Service',
-      amount: invoice.amount,
+      patientId: invoice.patient.id,
+      institutionId: invoice.institution.id,
+      service: invoice.serviceDescription || 'Medical Service',
+      amount: invoice.totalAmount,
       status: invoice.status,
-      processedDate: invoice.insuranceClaim?.processedDate || invoice.createdAt.toISOString(),
-      claimId: invoice.insuranceClaim?.claimId || `CLAIM-${invoice.id}`,
+      processedDate: invoice.createdAt.toISOString(),
+      claimId: `CLAIM-${invoice.id}`,
       patientName: invoice.patient.name,
       institutionName: invoice.institution.name,
     }));
@@ -506,12 +534,12 @@ router.get('/institution/transactions', rlsMiddleware, async (req: Request, res:
     const transformedTransactions = transactions.map((invoice: any) => ({
       id: invoice.id,
       type: 'invoice',
-      amount: invoice.amount,
+      amount: invoice.totalAmount,
       status: invoice.status,
       date: invoice.createdAt.toISOString(),
       patientName: invoice.patient.name,
       doctorName: invoice.doctor.name,
-      service: invoice.service || 'Medical Service',
+      service: invoice.serviceDescription || 'Medical Service',
     }));
 
     res.json({
@@ -578,7 +606,7 @@ router.get('/institution/payments', rlsMiddleware, async (req: Request, res: Res
     // Get paid invoices as payments received by the institution
     const payments = await prisma.invoice.findMany({
       where: {
-        status: 'paid'
+        status: 'PAID'
       },
       include: {
         patient: { select: { name: true, email: true } },
@@ -591,11 +619,11 @@ router.get('/institution/payments', rlsMiddleware, async (req: Request, res: Res
     // Transform to payment format
     const transformedPayments = payments.map((invoice: any) => ({
       id: invoice.id,
-      amount: invoice.amount,
+      amount: invoice.totalAmount,
       date: invoice.createdAt.toISOString(),
       patientName: invoice.patient.name,
       doctorName: invoice.doctor.name,
-      service: invoice.service || 'Medical Service',
+      service: invoice.serviceDescription || 'Medical Service',
       status: 'completed',
     }));
 

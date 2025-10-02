@@ -308,5 +308,261 @@ router.get('/products', optionalRlsMiddleware, async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch products' });
     }
 });
+/**
+ * Example: Get insurance claims (RLS protected)
+ * Insurance companies see claims for their patients
+ */
+router.get('/insurance-claims', rlsMiddleware, async (req, res) => {
+    try {
+        // For insurance companies, return claims from invoices where patients have insurance from this company
+        const claims = await prisma.invoice.findMany({
+            where: {
+                status: {
+                    in: ['PENDING', 'PAID', 'APPROVED']
+                }
+            },
+            include: {
+                patient: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        address: true,
+                    },
+                },
+                doctor: {
+                    select: {
+                        name: true,
+                        email: true,
+                    },
+                },
+                institution: {
+                    select: {
+                        name: true,
+                        address: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+        // Transform to match frontend expectations
+        const transformedClaims = claims.map((invoice) => ({
+            id: invoice.id,
+            patientId: invoice.patient.id,
+            institutionId: invoice.institution.id,
+            service: invoice.serviceDescription || 'Medical Service',
+            amount: invoice.totalAmount,
+            status: invoice.status,
+            processedDate: invoice.createdAt.toISOString(),
+            claimId: `CLAIM-${invoice.id}`,
+            patientName: invoice.patient.name,
+            institutionName: invoice.institution.name,
+        }));
+        res.json({
+            success: true,
+            count: transformedClaims.length,
+            data: transformedClaims,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching insurance claims:', error);
+        res.status(500).json({ error: 'Failed to fetch insurance claims' });
+    }
+});
+/**
+ * Example: Get insurance patients (RLS protected)
+ * Insurance companies see patients who have their insurance
+ */
+router.get('/insurance-patients', rlsMiddleware, async (req, res) => {
+    try {
+        // Get patients who have insurance from this insurance company
+        const patients = await prisma.patientInsurance.findMany({
+            include: {
+                patient: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        address: true,
+                        createdAt: true,
+                    },
+                },
+                insurancePackage: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+            },
+        });
+        // Transform to match frontend expectations
+        const transformedPatients = patients.map((pi) => ({
+            id: pi.patient.id,
+            name: pi.patient.name,
+            email: pi.patient.email,
+            phone: pi.patient.phone || '',
+            policyId: pi.insurancePackage.id,
+            policyName: pi.insurancePackage.name,
+            enrolledDate: pi.patient.createdAt.toISOString(),
+            status: new Date() <= pi.coverageEnd ? 'active' : 'inactive',
+        }));
+        res.json({
+            success: true,
+            count: transformedPatients.length,
+            data: transformedPatients,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching insurance patients:', error);
+        res.status(500).json({ error: 'Failed to fetch insurance patients' });
+    }
+});
+/**
+ * Example: Get institution invoices (RLS protected)
+ * Institutions see invoices for their services
+ */
+router.get('/institution/invoices', rlsMiddleware, async (req, res) => {
+    try {
+        const invoices = await prisma.invoice.findMany({
+            include: {
+                patient: { select: { name: true, email: true } },
+                doctor: { select: { name: true, email: true } },
+                institution: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        res.json({
+            success: true,
+            count: invoices.length,
+            data: invoices,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching institution invoices:', error);
+        res.status(500).json({ error: 'Failed to fetch institution invoices' });
+    }
+});
+/**
+ * Example: Get institution transactions (RLS protected)
+ * Institutions see their transaction history
+ */
+router.get('/institution/transactions', rlsMiddleware, async (req, res) => {
+    try {
+        // For now, return invoices as transactions - in a real app this might be a separate transactions table
+        const transactions = await prisma.invoice.findMany({
+            include: {
+                patient: { select: { name: true, email: true } },
+                doctor: { select: { name: true, email: true } },
+                institution: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        // Transform invoices to transaction format
+        const transformedTransactions = transactions.map((invoice) => ({
+            id: invoice.id,
+            type: 'invoice',
+            amount: invoice.totalAmount,
+            status: invoice.status,
+            date: invoice.createdAt.toISOString(),
+            patientName: invoice.patient.name,
+            doctorName: invoice.doctor.name,
+            service: invoice.serviceDescription || 'Medical Service',
+        }));
+        res.json({
+            success: true,
+            count: transformedTransactions.length,
+            data: transformedTransactions,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching institution transactions:', error);
+        res.status(500).json({ error: 'Failed to fetch institution transactions' });
+    }
+});
+/**
+ * Example: Get institution users (RLS protected)
+ * Institutions see users associated with them (patients, doctors, etc.)
+ */
+router.get('/institution/users', rlsMiddleware, async (req, res) => {
+    try {
+        // Get users who have interacted with this institution through invoices
+        const users = await prisma.user.findMany({
+            where: {
+                OR: [
+                    {
+                        patientInvoices: {
+                            some: {}
+                        }
+                    },
+                    {
+                        doctorInvoices: {
+                            some: {}
+                        }
+                    }
+                ]
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                address: true,
+                createdAt: true,
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        res.json({
+            success: true,
+            count: users.length,
+            data: users,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching institution users:', error);
+        res.status(500).json({ error: 'Failed to fetch institution users' });
+    }
+});
+/**
+ * Example: Get institution payments (RLS protected)
+ * Institutions see payments they've received
+ */
+router.get('/institution/payments', rlsMiddleware, async (req, res) => {
+    try {
+        // Get paid invoices as payments received by the institution
+        const payments = await prisma.invoice.findMany({
+            where: {
+                status: 'PAID'
+            },
+            include: {
+                patient: { select: { name: true, email: true } },
+                doctor: { select: { name: true, email: true } },
+                institution: { select: { name: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        // Transform to payment format
+        const transformedPayments = payments.map((invoice) => ({
+            id: invoice.id,
+            amount: invoice.totalAmount,
+            date: invoice.createdAt.toISOString(),
+            patientName: invoice.patient.name,
+            doctorName: invoice.doctor.name,
+            service: invoice.serviceDescription || 'Medical Service',
+            status: 'completed',
+        }));
+        res.json({
+            success: true,
+            count: transformedPayments.length,
+            data: transformedPayments,
+        });
+    }
+    catch (error) {
+        console.error('Error fetching institution payments:', error);
+        res.status(500).json({ error: 'Failed to fetch institution payments' });
+    }
+});
 export default router;
 //# sourceMappingURL=example.routes.js.map

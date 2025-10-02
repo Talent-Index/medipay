@@ -27,9 +27,10 @@ export default function DoctorPrescriptions() {
     const { data: items, isLoading, error } = usePrescriptions();
 
     const filtered = useMemo(() => {
-        if (!query.trim()) return items;
+        const safeItems = items || [];
+        if (!query.trim()) return safeItems;
         const q = query.toLowerCase();
-        return items.filter((p) =>
+        return safeItems.filter((p) =>
             p.medicationName?.toLowerCase().includes(q) ||
             p.dosage?.toLowerCase().includes(q) ||
             p.patient?.name?.toLowerCase().includes(q)
@@ -99,5 +100,3 @@ export default function DoctorPrescriptions() {
         </div>
     );
 }
-
-

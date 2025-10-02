@@ -23,12 +23,12 @@ export default function DoctorDashboard() {
   const { data: medicalRecords, isLoading: recordsLoading } = useMedicalRecords();
   const { data: prescriptions, isLoading: prescriptionsLoading } = usePrescriptions();
 
-  // Calculate stats from real data
-  const totalRecords = medicalRecords?.length || 0;
-  const totalPrescriptions = prescriptions?.length || 0;
+  // Calculate stats from real data with safe fallbacks
+  const totalRecords = (medicalRecords || []).length;
+  const totalPrescriptions = (prescriptions || []).length;
   const uniquePatients = new Set([
-    ...(medicalRecords?.map(r => r.patient?.id).filter(Boolean) || []),
-    ...(prescriptions?.map(p => p.patient?.id).filter(Boolean) || [])
+    ...((medicalRecords || []).map(r => r.patient?.id).filter(Boolean)),
+    ...((prescriptions || []).map(p => p.patient?.id).filter(Boolean))
   ]).size;
 
   const stats = [
@@ -172,9 +172,9 @@ export default function DoctorDashboard() {
           </div>
         </CardHeader>
         <CardContent>
-          {medicalRecords && medicalRecords.length > 0 ? (
+          {(medicalRecords || []).length > 0 ? (
             <div className="space-y-4">
-              {medicalRecords.slice(0, 3).map((record) => (
+              {(medicalRecords || []).slice(0, 3).map((record) => (
                 <div key={record.id} className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-smooth">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1">
